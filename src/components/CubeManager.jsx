@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { getMaterialColor } from "../simulation/materials.js";
+import { dispatchAction, createPlaceAction, createDeleteAction } from "../controllers/actionController.js";
 import Cube from "./Cube";
 import GhostCube from "./GhostCube";
 
@@ -11,29 +12,13 @@ export default function CubeManager({ dispatch, state }) {
   };
 
   const handlePlace = (position) => {
-    dispatch({
-      type: "PLACE_DRAFT",
-      payload: {
-        x: position[0],
-        y: position[1],
-        z: position[2],
-        material: state.currentMaterial
-      }
-    });
+    const action = createPlaceAction(position, state.currentMaterial);
+    dispatchAction(dispatch, action.type, action.payload);
   };
 
   const handleDelete = (cubeId, status) => {
-    if (status === "draft") {
-      dispatch({
-        type: "DELETE_DRAFT",
-        payload: { id: cubeId }
-      });
-    } else if (status === "confirmed") {
-      dispatch({
-        type: "DELETE_CONFIRMED",
-        payload: { id: cubeId }
-      });
-    }
+    const action = createDeleteAction(cubeId, status);
+    dispatchAction(dispatch, action.type, action.payload);
   };
 
   return (

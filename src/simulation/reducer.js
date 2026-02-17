@@ -163,7 +163,7 @@ export function simulationReducer(state, action) {
                 ...state,
                 collapseState: {
                     ...state.collapseState,
-                    countdown: action.payload
+                    countdown: action.payload.countdown
                 }
             };
         }

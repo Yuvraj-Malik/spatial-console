@@ -3,8 +3,9 @@ import { OrbitControls } from "@react-three/drei";
 import * as THREE from "three";
 import CubeManager from "./CubeManager";
 import GridHelper from "./GridHelper";
+import GestureCursor from "./GestureCursor";
 
-export default function SceneCanvas({ dispatch, state }) {
+export default function SceneCanvas({ dispatch, state, gestureCursorPos, gestureMode }) {
   return (
     <Canvas
       onContextMenu={(e) => e.preventDefault()}
@@ -17,12 +18,20 @@ export default function SceneCanvas({ dispatch, state }) {
 
       <color attach="background" args={["#0d1324"]} />
 
+      {/* Grid Helper */}
       <GridHelper />
+
+      {/* Cube Manager */}
       <CubeManager dispatch={dispatch} state={state} />
 
+      {/* Gesture Cursor */}
+      <GestureCursor position={gestureCursorPos} visible={gestureMode} />
+
+      {/* Camera Controls */}
       <OrbitControls
-        enablePan
-        enableZoom
+        enablePan={true}
+        enableZoom={true}
+        enableRotate={true}
         mouseButtons={{
           LEFT: null,
           MIDDLE: THREE.MOUSE.DOLLY,

@@ -1,18 +1,24 @@
 import SceneCanvas from "./components/SceneCanvas";
 import UIOverlay from "./components/UIOverlay";
-import { useReducer, useEffect, useRef } from "react";
+import GestureOverlay from "./components/GestureOverlay";
+import { useReducer, useEffect, useRef, useState } from "react";
 import { simulationReducer, initialState } from "./simulation/reducer.js";
+import { dispatchAction, createMaterialAction } from "./controllers/actionController.js";
 
 function App() {
   const [state, dispatch] = useReducer(simulationReducer, initialState);
   const countdownRef = useRef(null);
+  
+  // Gesture state
+  const [gestureCursorPos, setGestureCursorPos] = useState({ x: 0, y: 0.5, z: 0 });
+  const [isGestureActive, setIsGestureActive] = useState(false);
 
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.ctrlKey && e.key === 'z') {
         e.preventDefault();
-        dispatch({ type: "UNDO" });
+        dispatchAction(dispatch, "UNDO");
       }
     };
 
@@ -24,11 +30,11 @@ function App() {
   useEffect(() => {
     if (state.collapseState.warningActive && state.collapseState.countdown > 0) {
       countdownRef.current = setTimeout(() => {
-        dispatch({ type: "UPDATE_COUNTDOWN", payload: state.collapseState.countdown - 1 });
+        dispatchAction(dispatch, "UPDATE_COUNTDOWN", { countdown: state.collapseState.countdown - 1 });
       }, 1000);
     } else if (state.collapseState.warningActive && state.collapseState.countdown === 0) {
       // Trigger collapse
-      dispatch({ type: "COLLAPSE" });
+      dispatchAction(dispatch, "COLLAPSE");
     }
 
     return () => {
@@ -39,27 +45,43 @@ function App() {
   }, [state.collapseState.warningActive, state.collapseState.countdown]);
 
   const handleMaterialChange = (material) => {
-    dispatch({
-      type: "SET_MATERIAL",
-      payload: material
-    });
+    const action = createMaterialAction(material);
+    dispatchAction(dispatch, action.type, action.payload);
   };
 
   const handleConfirm = () => {
-    dispatch({ type: "CONFIRM_DRAFT" });
+    dispatchAction(dispatch, "CONFIRM_DRAFT");
   };
 
   const handleUndo = () => {
-    dispatch({ type: "UNDO" });
+    dispatchAction(dispatch, "UNDO");
   };
 
   const handleCancelCollapse = () => {
-    dispatch({ type: "CANCEL_COLLAPSE" });
+    dispatchAction(dispatch, "CANCEL_COLLAPSE");
   };
+
+  // Gesture callbacks
+  const handleGestureCursorUpdate = (position) => {
+    setGestureCursorPos(position);
+  };
+
+  const handleGestureDetected = (gesture) => {
+    console.log("🎭 Gesture detected:", gesture);
+    // Phase 2: Logging only - no actions yet
+  };
+
+  // Determine if gesture mode is active (cursor moves)
+  const gestureMode = isGestureActive || (gestureCursorPos.x !== 0 || gestureCursorPos.z !== 0);
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#05070d" }}>
-      <SceneCanvas dispatch={dispatch} state={state} />
+      <SceneCanvas 
+        dispatch={dispatch} 
+        state={state} 
+        gestureCursorPos={gestureCursorPos}
+        gestureMode={gestureMode}
+      />
       <UIOverlay
         currentMaterial={state.currentMaterial}
         onMaterialChange={handleMaterialChange}
@@ -69,6 +91,10 @@ function App() {
         confirmedCount={state.confirmedCubes.length}
         collapseState={state.collapseState}
         onCancelCollapse={handleCancelCollapse}
+      />
+      <GestureOverlay
+        onCursorUpdate={handleGestureCursorUpdate}
+        onGestureDetected={handleGestureDetected}
       />
     </div>
   );
