@@ -1,14 +1,14 @@
-export default function GhostCube({ position }) {
+export default function GhostCube({ position, color }) {
   if (!position) return null;
 
   return (
     <mesh position={position}>
       <boxGeometry args={[1, 1, 1]} />
       <meshStandardMaterial
-        color="#3b82f6"
+        color={color}
         transparent
-        opacity={0.35}
-        emissive="#1e40af"
+        opacity={0.3}
+        emissive={color}
       />
     </mesh>
   );

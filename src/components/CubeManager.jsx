@@ -1,73 +1,84 @@
 import { useState } from "react";
-import CubePrimitive from "./CubePrimitive";
-import GroundPlane from "./GroundPlane";
+import { getMaterialColor } from "../simulation/materials.js";
+import Cube from "./Cube";
 import GhostCube from "./GhostCube";
 
-export default function CubeManager() {
-  const [cubes, setCubes] = useState([]);
-  const [hoverPosition, setHoverPosition] = useState(null);
+export default function CubeManager({ dispatch, state }) {
+  const [ghostPosition, setGhostPosition] = useState([0, 0.5, 0]);
 
-  const positionExists = (pos) => {
-    return cubes.some(
-      (c) =>
-        c.x === pos[0] &&
-        c.y === pos[1] &&
-        c.z === pos[2]
-    );
+  const handleHover = (position) => {
+    setGhostPosition(position);
   };
 
-  const placeCube = (pos) => {
-    if (positionExists(pos)) return;
-
-    setCubes([...cubes, {
-      x: pos[0],
-      y: pos[1],
-      z: pos[2]
-    }]);
+  const handlePlace = (position) => {
+    dispatch({
+      type: "PLACE_DRAFT",
+      payload: {
+        x: position[0],
+        y: position[1],
+        z: position[2],
+        material: state.currentMaterial
+      }
+    });
   };
 
-  const deleteCube = (pos) => {
-    setCubes(
-      cubes.filter(
-        (c) =>
-          !(c.x === pos[0] &&
-            c.y === pos[1] &&
-            c.z === pos[2])
-      )
-    );
+  const handleDelete = (cubeId) => {
+    dispatch({
+      type: "DELETE_DRAFT",
+      payload: { id: cubeId }
+    });
   };
 
   return (
     <>
-      <GroundPlane
-        onMove={(e) => {
+      {/* Ground plane for interaction */}
+      <mesh
+        rotation={[-Math.PI / 2, 0, 0]}
+        position={[0, 0, 0]}
+        onPointerMove={(e) => {
           const point = e.point;
-
-          const snappedX = Math.round(point.x);
-          const snappedZ = Math.round(point.z);
-
-          const pos = [snappedX, 0.5, snappedZ];
-
-          setHoverPosition(pos);
+          setGhostPosition([Math.round(point.x), 0.5, Math.round(point.z)]);
         }}
-        onClick={(e) => {
-          if (e.button !== 0) return;
-          if (!hoverPosition) return;
-          placeCube(hoverPosition);
+        onPointerDown={(e) => {
+          e.stopPropagation();
+          if (e.button === 0) {
+            const point = e.point;
+            handlePlace([Math.round(point.x), 0.5, Math.round(point.z)]);
+          }
         }}
-      />
+      >
+        <planeGeometry args={[200, 200]} />
+        <meshBasicMaterial visible={false} />
+      </mesh>
 
-      {cubes.map((cube, index) => (
-        <CubePrimitive
-          key={index}
-          position={[cube.x, cube.y, cube.z]}
-          onHover={(pos) => setHoverPosition(pos)}
-          onPlace={placeCube}
-          onDelete={deleteCube}
+      {/* Render confirmed cubes */}
+      {state.confirmedCubes.map((cube) => (
+        <Cube
+          key={cube.id}
+          cube={cube}
+          onHover={handleHover}
+          onPlace={handlePlace}
+          onDelete={() => handleDelete(cube.id)}
+          isUnstable={state.collapseState.unstableIds.includes(cube.id)}
         />
       ))}
-
-      <GhostCube position={hoverPosition} />
+      
+      {/* Render draft cubes */}
+      {state.draftCubes.map((cube) => (
+        <Cube
+          key={cube.id}
+          cube={cube}
+          onHover={handleHover}
+          onPlace={handlePlace}
+          onDelete={() => handleDelete(cube.id)}
+        />
+      ))}
+      
+      {/* Ghost cube for preview */}
+      <GhostCube 
+        position={ghostPosition} 
+        color={getMaterialColor(state.currentMaterial)}
+      />
     </>
   );
 }

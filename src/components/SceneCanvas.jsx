@@ -4,7 +4,7 @@ import * as THREE from "three";
 import CubeManager from "./CubeManager";
 import GridHelper from "./GridHelper";
 
-export default function SceneCanvas() {
+export default function SceneCanvas({ dispatch, state }) {
   return (
     <Canvas
       onContextMenu={(e) => e.preventDefault()}
@@ -18,7 +18,7 @@ export default function SceneCanvas() {
       <color attach="background" args={["#0d1324"]} />
 
       <GridHelper />
-      <CubeManager />
+      <CubeManager dispatch={dispatch} state={state} />
 
       <OrbitControls
         enablePan
