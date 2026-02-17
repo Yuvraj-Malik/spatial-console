@@ -64,7 +64,7 @@ export function simulationReducer(state, action) {
                 ...state,
                 confirmedCubes: newConfirmedCubes,
                 draftCubes: [],
-                history: [...state.history, action],
+                history: [...state.history, { ...action, previousDraftCubes: state.draftCubes }],
                 collapseState: {
                     warningActive: unstableIds.length > 0,
                     unstableIds,
@@ -79,7 +79,6 @@ export function simulationReducer(state, action) {
             const lastAction = state.history[state.history.length - 1];
             const newHistory = state.history.slice(0, -1);
 
-            // Basic undo handling for now
             if (lastAction.type === "PLACE_DRAFT") {
                 return {
                     ...state,
@@ -98,15 +97,36 @@ export function simulationReducer(state, action) {
             }
 
             if (lastAction.type === "CONFIRM_DRAFT") {
+                // Revert confirmed cubes back to draft
+                const recentlyConfirmed = lastAction.previousDraftCubes || [];
+                const remainingConfirmed = state.confirmedCubes.filter(
+                    cube => !recentlyConfirmed.some(draft => draft.id === cube.id)
+                );
+
                 return {
                     ...state,
-                    draftCubes: state.confirmedCubes,
-                    confirmedCubes: [],
-                    history: newHistory
+                    confirmedCubes: remainingConfirmed,
+                    draftCubes: recentlyConfirmed.map(cube => ({ ...cube, status: "draft" })),
+                    history: newHistory,
+                    collapseState: {
+                        warningActive: false,
+                        unstableIds: [],
+                        countdown: 3
+                    }
                 };
             }
 
             return state;
+        }
+
+        case "DELETE_CONFIRMED": {
+            return {
+                ...state,
+                confirmedCubes: state.confirmedCubes.filter(
+                    (c) => c.id !== action.payload.id
+                ),
+                history: [...state.history, action]
+            };
         }
 
         case "COLLAPSE": {

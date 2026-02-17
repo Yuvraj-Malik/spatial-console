@@ -22,11 +22,18 @@ export default function CubeManager({ dispatch, state }) {
     });
   };
 
-  const handleDelete = (cubeId) => {
-    dispatch({
-      type: "DELETE_DRAFT",
-      payload: { id: cubeId }
-    });
+  const handleDelete = (cubeId, status) => {
+    if (status === "draft") {
+      dispatch({
+        type: "DELETE_DRAFT",
+        payload: { id: cubeId }
+      });
+    } else if (status === "confirmed") {
+      dispatch({
+        type: "DELETE_CONFIRMED",
+        payload: { id: cubeId }
+      });
+    }
   };
 
   return (
@@ -58,7 +65,7 @@ export default function CubeManager({ dispatch, state }) {
           cube={cube}
           onHover={handleHover}
           onPlace={handlePlace}
-          onDelete={() => handleDelete(cube.id)}
+          onDelete={() => handleDelete(cube.id, cube.status)}
           isUnstable={state.collapseState.unstableIds.includes(cube.id)}
         />
       ))}
@@ -70,7 +77,7 @@ export default function CubeManager({ dispatch, state }) {
           cube={cube}
           onHover={handleHover}
           onPlace={handlePlace}
-          onDelete={() => handleDelete(cube.id)}
+          onDelete={() => handleDelete(cube.id, cube.status)}
         />
       ))}
       

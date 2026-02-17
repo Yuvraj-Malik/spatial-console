@@ -1,4 +1,5 @@
-import { MATERIALS } from "../simulation/materials.js";
+import { useState } from "react";
+import { MATERIALS, COLOR_PALETTE, createCustomMaterial } from "../simulation/materials.js";
 
 export default function UIOverlay({ 
   currentMaterial, 
@@ -10,12 +11,14 @@ export default function UIOverlay({
   collapseState,
   onCancelCollapse
 }) {
+  const [showColorPalette, setShowColorPalette] = useState(false);
+
   return (
     <div className="absolute top-4 left-4 bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 text-white max-w-sm">
       {/* Material Selection */}
       <div className="mb-4">
         <h3 className="text-sm font-semibold mb-2 text-gray-300">Material</h3>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 mb-2">
           {Object.entries(MATERIALS).map(([key, material]) => (
             <button
               key={key}
@@ -33,7 +36,46 @@ export default function UIOverlay({
             </button>
           ))}
         </div>
+        
+        {/* Custom Color Button */}
+        <button
+          onClick={() => setShowColorPalette(!showColorPalette)}
+          className={`w-full px-3 py-2 rounded text-xs font-medium transition-all ${
+            currentMaterial.name === "Custom"
+              ? "bg-purple-600 text-white ring-2 ring-purple-400"
+              : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+          }`}
+          style={{
+            borderLeft: `4px solid ${currentMaterial.color}`
+          }}
+        >
+          {currentMaterial.name === "Custom" ? "Custom Color" : "Custom Color"}
+        </button>
       </div>
+
+      {/* Color Palette */}
+      {showColorPalette && (
+        <div className="mb-4 p-3 bg-gray-800 rounded">
+          <h3 className="text-xs font-semibold mb-2 text-gray-300">Choose Color</h3>
+          <div className="grid grid-cols-6 gap-1">
+            {COLOR_PALETTE.map((color) => (
+              <button
+                key={color}
+                onClick={() => {
+                  onMaterialChange(createCustomMaterial(color));
+                  setShowColorPalette(false);
+                }}
+                className={`w-8 h-8 rounded border-2 transition-all hover:scale-110 ${
+                  currentMaterial.color === color
+                    ? "border-white"
+                    : "border-gray-600"
+                }`}
+                style={{ backgroundColor: color }}
+              />
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Status */}
       <div className="mb-4">

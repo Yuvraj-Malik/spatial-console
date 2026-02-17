@@ -7,10 +7,22 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
+.pnp
+.pnp.js
+
+# Build outputs
 dist
 dist-ssr
 *.local
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +34,25 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# Debug files
+debug.log
+*.debug
+
+# Temporary files
+*.tmp
+*.temp
+.cache
+
+# Coverage reports
+coverage/
+*.lcov
+
+# Package manager lock files (keep one based on your preference)
+# yarn.lock
+# package-lock.json
+# pnpm-lock.yaml
