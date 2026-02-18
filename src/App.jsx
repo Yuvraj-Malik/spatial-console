@@ -68,7 +68,48 @@ function App() {
 
   const handleGestureDetected = (gesture) => {
     console.log("🎭 Gesture detected:", gesture);
-    // Phase 2: Logging only - no actions yet
+    console.log("📍 Current cursor position:", gestureCursorPos);
+    console.log("📊 Current state:", {
+      draftCubes: state.draftCubes.length,
+      confirmedCubes: state.confirmedCubes.length
+    });
+    
+    // Connect gestures to actual cube operations
+    switch (gesture) {
+      case 'pinch':
+        // Place cube at cursor position - trigger placement event
+        console.log("🏗️ Triggering cube placement");
+        // Dispatch custom event for CubeManager to handle
+        window.dispatchEvent(new CustomEvent('gesturePlace'));
+        break;
+        
+      case 'open_palm':
+        // Confirm structure
+        console.log("✅ Confirming structure");
+        dispatchAction(dispatch, "CONFIRM_DRAFT");
+        break;
+        
+      case 'fist':
+        // Delete cube at cursor position
+        console.log("🗑️ Deleting cube at cursor position");
+        // Find cube at cursor position and delete it
+        const allCubes = [...state.draftCubes, ...state.confirmedCubes];
+        const cubeToDelete = allCubes.find(
+          cube => cube.x === gestureCursorPos.x && 
+                 cube.y === gestureCursorPos.y && 
+                 cube.z === gestureCursorPos.z
+        );
+        if (cubeToDelete) {
+          console.log("🎯 Found cube to delete:", cubeToDelete);
+          dispatchAction(dispatch, cubeToDelete.status === "draft" ? "DELETE_DRAFT" : "DELETE_CONFIRMED", { id: cubeToDelete.id });
+        } else {
+          console.log("❌ No cube found at cursor position");
+        }
+        break;
+        
+      default:
+        console.log("❓ Unknown gesture:", gesture);
+    }
   };
 
   // Determine if gesture mode is active (cursor moves)

@@ -22,7 +22,7 @@ export default function SceneCanvas({ dispatch, state, gestureCursorPos, gesture
       <GridHelper />
 
       {/* Cube Manager */}
-      <CubeManager dispatch={dispatch} state={state} />
+      <CubeManager dispatch={dispatch} state={state} gestureCursorPos={gestureCursorPos} gestureMode={gestureMode} />
 
       {/* Gesture Cursor */}
       <GestureCursor position={gestureCursorPos} visible={gestureMode} />
