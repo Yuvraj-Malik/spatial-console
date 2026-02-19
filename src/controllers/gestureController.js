@@ -1,5 +1,5 @@
-// Complete Gesture Controller with MediaPipe Integration
-// Robust hand tracking, cursor mapping, and gesture detection
+// Optimized Gesture Controller with Virtual Cursor System
+// Maps hand gestures to simulated mouse events with performance optimizations
 
 import { Hands } from "@mediapipe/hands";
 import { Camera } from "@mediapipe/camera_utils";
@@ -13,25 +13,33 @@ class GestureController {
     this.isInitialized = false;
     this.isActive = false;
     this.mouseSimulation = false;
-
-    // Cursor tracking
-    this.cursorPosition = { x: 0, y: 0.5, z: 0 };
-    this.previousPosition = { x: 0, y: 0.5, z: 0 };
-    this.smoothingFactor = 0.3;
-
+    
+    // Virtual cursor tracking
+    this.cursorX = window.innerWidth / 2;
+    this.cursorY = window.innerHeight / 2;
+    this.smoothedX = this.cursorX;
+    this.smoothedY = this.cursorY;
+    
     // Gesture detection state
     this.currentGesture = null;
     this.gestureHistory = [];
     this.lastGestureTime = 0;
-    this.gestureCooldown = 300; // ms
-
+    this.gestureCooldown = 400; // ms for click cooldown
+    
+    // Click state
+    this.isPinching = false;
+    this.lastClickTime = 0;
+    
     // Callbacks
     this.onCursorUpdate = null;
     this.onGestureDetected = null;
-
+    
     // Performance
     this.lastUpdateTime = 0;
-    this.targetFrameRate = 30;
+    this.targetFrameRate = 15; // Reduced for performance
+    
+    // Expose cursor position for external access
+    this.getCursorPosition = () => ({ x: this.smoothedX, y: this.smoothedY });
   }
 
   async initialize(videoElement, canvasElement) {
@@ -41,8 +49,8 @@ class GestureController {
     try {
       // Test camera access first
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          width: 640,
+        video: { 
+          width: 640, 
           height: 480,
           facingMode: 'user'
         }
@@ -56,7 +64,7 @@ class GestureController {
       return;
     }
 
-    // Initialize MediaPipe Hands
+    // Initialize MediaPipe Hands with optimized settings
     this.hands = new Hands({
       locateFile: (file) => {
         return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
@@ -65,9 +73,9 @@ class GestureController {
 
     this.hands.setOptions({
       maxNumHands: 1,
-      modelComplexity: 1,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
+      modelComplexity: 0, // Use simplest model for performance
+      minDetectionConfidence: 0.6, // Higher confidence for stability
+      minTrackingConfidence: 0.6
     });
 
     this.hands.onResults(this.onResults.bind(this));
@@ -87,77 +95,56 @@ class GestureController {
   setupMouseSimulation() {
     this.mouseSimulation = true;
     this.isInitialized = true;
-
+    
     const handleMouseMove = (e) => {
       if (this.isActive) return; // Don't interfere with gesture mode
-
-      // Store mouse coordinates for raycasting in CubeManager
-      this.cursorPosition = {
-        x: e.clientX,
-        y: e.clientY,
-        z: 0 // Will be computed by raycasting
-      };
-
+      
+      const cursor = document.getElementById("virtual-cursor");
+      if (cursor) {
+        cursor.style.left = `${e.clientX}px`;
+        cursor.style.top = `${e.clientY}px`;
+      }
+      
       if (this.onCursorUpdate) {
-        this.onCursorUpdate(this.cursorPosition);
+        this.onCursorUpdate({ x: e.clientX, y: e.clientY, z: 0 });
       }
     };
 
     const handleKeyPress = (e) => {
       if (this.isActive) return;
-
+      
       console.log("⌨️ Key pressed:", e.key.toLowerCase());
-
-      switch (e.key.toLowerCase()) {
+      
+      switch(e.key.toLowerCase()) {
         case 'p': // Pinch
           console.log("🤏 Pinch detected (simulated) - PLACE CUBE");
-          this.currentGesture = 'pinch';
-          if (this.onGestureDetected) {
-            this.onGestureDetected('pinch');
-          }
-          setTimeout(() => {
-            this.currentGesture = null;
-          }, 100);
+          this.simulateMouseEvent("mousedown", 0);
+          this.simulateMouseEvent("mouseup", 0);
           break;
-
+          
         case 'o': // Open palm
           console.log("✋ Open palm detected (simulated) - CONFIRM STRUCTURE");
-          this.currentGesture = 'open_palm';
           if (this.onGestureDetected) {
             this.onGestureDetected('open_palm');
           }
-          setTimeout(() => {
-            this.currentGesture = null;
-          }, 100);
           break;
-
+          
         case 'f': // Fist
           console.log("✊ Fist detected (simulated) - DELETE CUBE");
-          this.currentGesture = 'fist';
-          if (this.onGestureDetected) {
-            this.onGestureDetected('fist');
-          }
-          setTimeout(() => {
-            this.currentGesture = null;
-          }, 100);
+          this.simulateMouseEvent("contextmenu", 2);
           break;
-
+          
         case ' ': // Space - click simulation
           console.log("🤏 Pinch detected (simulated) - PLACE CUBE");
-          this.currentGesture = 'pinch';
-          if (this.onGestureDetected) {
-            this.onGestureDetected('pinch');
-          }
-          setTimeout(() => {
-            this.currentGesture = null;
-          }, 100);
+          this.simulateMouseEvent("mousedown", 0);
+          this.simulateMouseEvent("mouseup", 0);
           break;
       }
     };
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('keypress', handleKeyPress);
-
+    
     console.log("🖱️ Mouse simulation mode activated");
     console.log("🎮 Keyboard shortcuts: P=Pinch, O=Open Palm, F=Fist, Space=Click");
   }
@@ -175,7 +162,7 @@ class GestureController {
     }
 
     console.log("🎬 Starting camera...");
-
+    
     this.camera.start().then(() => {
       console.log("📹 Camera started - gesture detection active");
       this.isActive = true;
@@ -196,129 +183,80 @@ class GestureController {
     // Performance optimization: limit frame rate
     const currentTime = Date.now();
     const frameInterval = 1000 / this.targetFrameRate;
-
+    
     if (currentTime - this.lastUpdateTime < frameInterval) {
       return;
     }
     this.lastUpdateTime = currentTime;
 
-    // Clear canvas
+    // Quick early exit if no hands
+    if (!results.multiHandLandmarks || results.multiHandLandmarks.length === 0) {
+      // Clear canvas and show message only when needed
+      const canvasCtx = this.canvasElement.getContext('2d');
+      if (canvasCtx) {
+        canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+        canvasCtx.drawImage(results.image, 0, 0, this.canvasElement.width, this.canvasElement.height);
+        canvasCtx.fillStyle = 'rgba(0, 255, 0, 0.8)';
+        canvasCtx.font = '16px Arial';
+        canvasCtx.fillText('Show hand to camera', 10, 30);
+      }
+      this.currentGesture = null;
+      return;
+    }
+
+    const landmarks = results.multiHandLandmarks[0];
+    
+    // Clear canvas and draw video
     const canvasCtx = this.canvasElement.getContext('2d');
+    if (!canvasCtx) return;
+    
     canvasCtx.save();
     canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
 
-    // Draw video frame
+    // Draw video frame (for visibility)
     canvasCtx.drawImage(results.image, 0, 0, this.canvasElement.width, this.canvasElement.height);
 
-    if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-      const landmarks = results.multiHandLandmarks[0];
-
-      // Draw hand landmarks
-      this.drawHandLandmarks(canvasCtx, landmarks);
-
-      // Get index finger tip position (landmark #8)
-      const indexTip = landmarks[8];
-
-      // Convert MediaPipe coordinates to screen coordinates
-      const screenCoords = this.handToScreenCoordinates(indexTip);
-
-      // Update cursor position with screen coordinates
-      this.updateCursorPosition(screenCoords);
-
-      // Detect gestures
-      this.detectGestures(landmarks);
-
-      // Update cursor position callback
-      if (this.onCursorUpdate) {
-        this.onCursorUpdate(this.cursorPosition);
-      }
-    } else {
-      // No hand detected
-      canvasCtx.fillStyle = 'rgba(0, 255, 0, 0.8)';
-      canvasCtx.font = '16px Arial';
-      canvasCtx.fillText('Show hand to camera', 10, 30);
-
-      this.currentGesture = null;
-    }
+    // Update virtual cursor position (optimized)
+    this.updateVirtualCursor(landmarks);
+    
+    // Detect gestures (throttled)
+    this.detectGestures(landmarks);
 
     canvasCtx.restore();
   }
 
-  drawHandLandmarks(ctx, landmarks) {
-    // Draw connections
-    const connections = [
-      [0, 1], [1, 2], [2, 3], [3, 4], // Thumb
-      [0, 5], [5, 6], [6, 7], [7, 8], // Index finger
-      [5, 9], [9, 10], [10, 11], [11, 12], // Middle finger
-      [9, 13], [13, 14], [14, 15], [15, 16], // Ring finger
-      [13, 17], [17, 18], [18, 19], [19, 20], // Pinky
-      [0, 17] // Palm
-    ];
-
-    ctx.strokeStyle = '#00FF00';
-    ctx.lineWidth = 2;
-
-    connections.forEach(([start, end]) => {
-      const startPoint = landmarks[start];
-      const endPoint = landmarks[end];
-
-      ctx.beginPath();
-      ctx.moveTo(startPoint.x * this.canvasElement.width, startPoint.y * this.canvasElement.height);
-      ctx.lineTo(endPoint.x * this.canvasElement.width, endPoint.y * this.canvasElement.height);
-      ctx.stroke();
-    });
-
-    // Draw landmarks
-    landmarks.forEach((landmark, i) => {
-      ctx.fillStyle = i === 8 ? '#FF0000' : '#00FF00'; // Red for index tip
-      ctx.beginPath();
-      ctx.arc(
-        landmark.x * this.canvasElement.width,
-        landmark.y * this.canvasElement.height,
-        4,
-        0,
-        2 * Math.PI
-      );
-      ctx.fill();
-    });
-  }
-
-  handToScreenCoordinates(landmark) {
-    // Convert MediaPipe normalized coordinates to screen coordinates
-    // MediaPipe: x,y ∈ [0,1] where (0,0) is top-left
-    // Screen: pixels from top-left
-    return {
-      x: landmark.x * window.innerWidth,
-      y: landmark.y * window.innerHeight
-    };
-  }
-
-  updateCursorPosition(screenCoords) {
-    // Store screen coordinates for raycasting in CubeManager
+  updateVirtualCursor(landmarks) {
+    const indexTip = landmarks[8];
+    
+    const rawX = indexTip.x * window.innerWidth;
+    const rawY = indexTip.y * window.innerHeight;
+    
+    // Smooth movement (lighter smoothing for better responsiveness)
+    this.smoothedX = this.smoothedX * 0.7 + rawX * 0.3;
+    this.smoothedY = this.smoothedY * 0.7 + rawY * 0.3;
+    
+    // Update cursor position for external access
     this.cursorPosition = {
-      x: screenCoords.x,
-      y: screenCoords.y,
-      z: 0 // Will be computed by raycasting
+      x: this.smoothedX,
+      y: this.smoothedY,
+      z: 0
     };
-  }
-
-  smoothCursorPosition(newPosition) {
-    this.cursorPosition.x = this.previousPosition.x * (1 - this.smoothingFactor) + newPosition.x * this.smoothingFactor;
-    this.cursorPosition.y = this.previousPosition.y * (1 - this.smoothingFactor) + newPosition.y * this.smoothingFactor;
-    this.cursorPosition.z = this.previousPosition.z * (1 - this.smoothingFactor) + newPosition.z * this.smoothingFactor;
-
-    // Round to grid
-    this.cursorPosition.x = Math.round(this.cursorPosition.x);
-    this.cursorPosition.y = 0.5;
-    this.cursorPosition.z = Math.round(this.cursorPosition.z);
-
-    // Store for next frame
-    this.previousPosition = { ...this.cursorPosition };
+    
+    // Update virtual cursor DOM element
+    const cursor = document.getElementById("virtual-cursor");
+    if (cursor) {
+      cursor.style.left = `${this.smoothedX}px`;
+      cursor.style.top = `${this.smoothedY}px`;
+    }
+    
+    if (this.onCursorUpdate) {
+      this.onCursorUpdate(this.cursorPosition);
+    }
   }
 
   detectGestures(landmarks) {
     const currentTime = Date.now();
-
+    
     // Cooldown check
     if (currentTime - this.lastGestureTime < this.gestureCooldown) {
       return;
@@ -330,52 +268,83 @@ class GestureController {
     const ringTip = landmarks[16];
     const pinkyTip = landmarks[20];
     const wrist = landmarks[0];
-
+    
     // Calculate distances
     const thumbIndexDistance = this.calculateDistance(thumbTip, indexTip);
     const palmHeight = this.calculateDistance(wrist, middleTip);
-
+    
     // Detect pinch (thumb and index close)
     const isPinch = thumbIndexDistance < 0.05;
-
+    
     // Detect open palm (all fingers extended)
-    const isOpenPalm =
+    const isOpenPalm = 
       this.calculateDistance(wrist, indexTip) > palmHeight * 0.7 &&
       this.calculateDistance(wrist, middleTip) > palmHeight * 0.7 &&
       this.calculateDistance(wrist, ringTip) > palmHeight * 0.7 &&
       this.calculateDistance(wrist, pinkyTip) > palmHeight * 0.7;
-
+    
     // Detect fist (all fingers closed)
-    const isFist =
+    const isFist = 
       this.calculateDistance(wrist, indexTip) < palmHeight * 0.3 &&
       this.calculateDistance(wrist, middleTip) < palmHeight * 0.3 &&
       this.calculateDistance(wrist, ringTip) < palmHeight * 0.3 &&
       this.calculateDistance(wrist, pinkyTip) < palmHeight * 0.3;
-
-    // Trigger gestures
-    if (isPinch && this.currentGesture !== 'pinch') {
-      this.currentGesture = 'pinch';
+    
+    // Handle pinch (left click)
+    if (isPinch && !this.isPinching && currentTime - this.lastClickTime > 400) {
+      this.isPinching = true;
+      this.lastClickTime = currentTime;
       this.lastGestureTime = currentTime;
-      console.log("🤏 Pinch detected");
+      
+      console.log("🤏 Pinch detected - LEFT CLICK");
+      this.simulateMouseEvent("mousedown", 0);
+      this.simulateMouseEvent("mouseup", 0);
+      
       if (this.onGestureDetected) {
         this.onGestureDetected('pinch');
+      }
+    } else if (!isPinch) {
+      this.isPinching = false;
+    }
+    
+    // Handle grip (right click)
+    if (isFist && this.currentGesture !== 'fist') {
+      this.currentGesture = 'fist';
+      this.lastGestureTime = currentTime;
+      
+      console.log("✊ Fist detected - RIGHT CLICK");
+      this.simulateMouseEvent("contextmenu", 2);
+      
+      if (this.onGestureDetected) {
+        this.onGestureDetected('fist');
       }
     } else if (isOpenPalm && this.currentGesture !== 'open_palm') {
       this.currentGesture = 'open_palm';
       this.lastGestureTime = currentTime;
+      
       console.log("✋ Open palm detected");
+      
       if (this.onGestureDetected) {
         this.onGestureDetected('open_palm');
       }
-    } else if (isFist && this.currentGesture !== 'fist') {
-      this.currentGesture = 'fist';
-      this.lastGestureTime = currentTime;
-      console.log("✊ Fist detected");
-      if (this.onGestureDetected) {
-        this.onGestureDetected('fist');
-      }
     } else if (!isPinch && !isOpenPalm && !isFist) {
       this.currentGesture = null;
+    }
+  }
+
+  simulateMouseEvent(type, button) {
+    const cursorPos = this.getCursorPosition();
+    
+    const event = new MouseEvent(type, {
+      bubbles: true,
+      clientX: cursorPos.x,
+      clientY: cursorPos.y,
+      button
+    });
+
+    const target = document.elementFromPoint(cursorPos.x, cursorPos.y);
+    if (target) {
+      target.dispatchEvent(event);
     }
   }
 
@@ -391,10 +360,6 @@ class GestureController {
 
   setGestureCallback(callback) {
     this.onGestureDetected = callback;
-  }
-
-  getCursorPosition() {
-    return { ...this.cursorPosition };
   }
 
   setGestureModeActive(isActive) {

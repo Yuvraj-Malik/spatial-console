@@ -5,6 +5,26 @@ import { useReducer, useEffect, useRef, useState } from "react";
 import { simulationReducer, initialState } from "./simulation/reducer.js";
 import { dispatchAction, createMaterialAction } from "./controllers/actionController.js";
 
+// Virtual Cursor Component
+function VirtualCursor() {
+  return (
+    <div
+      id="virtual-cursor"
+      style={{
+        position: "fixed",
+        width: "14px",
+        height: "14px",
+        borderRadius: "50%",
+        background: "white",
+        pointerEvents: "none",
+        transform: "translate(-50%, -50%)",
+        zIndex: 9999,
+        transition: "transform 0.05s linear"
+      }}
+    />
+  );
+}
+
 function App() {
   const [state, dispatch] = useReducer(simulationReducer, initialState);
   const countdownRef = useRef(null);
@@ -22,43 +42,34 @@ function App() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Collapse countdown timer
-  useEffect(() => {
-    if (state.collapseState.warningActive && state.collapseState.countdown > 0) {
-      countdownRef.current = setTimeout(() => {
-        dispatchAction(dispatch, "UPDATE_COUNTDOWN", { countdown: state.collapseState.countdown - 1 });
-      }, 1000);
-    } else if (state.collapseState.warningActive && state.collapseState.countdown === 0) {
-      // Trigger collapse
-      dispatchAction(dispatch, "COLLAPSE");
-    }
-
-    return () => {
-      if (countdownRef.current) {
-        clearTimeout(countdownRef.current);
-      }
-    };
-  }, [state.collapseState.warningActive, state.collapseState.countdown]);
-
-  const handleMaterialChange = (material) => {
-    const action = createMaterialAction(material);
-    dispatchAction(dispatch, action.type, action.payload);
+  const handleDelete = (cubeId, status) => {
+    dispatch({
+      type: status === "draft" ? "DELETE_DRAFT" : "DELETE_CONFIRMED",
+      payload: { id: cubeId }
+    });
   };
 
-  const handleConfirm = () => {
-    dispatchAction(dispatch, "CONFIRM_DRAFT");
+  const handleMaterialChange = (material) => {
+    dispatch({
+      type: "SET_MATERIAL",
+      payload: { material }
+    });
   };
 
   const handleUndo = () => {
-    dispatchAction(dispatch, "UNDO");
+    dispatch({ type: "UNDO" });
+  };
+
+  const handleCollapse = () => {
+    dispatch({ type: "COLLAPSE" });
   };
 
   const handleCancelCollapse = () => {
-    dispatchAction(dispatch, "CANCEL_COLLAPSE");
+    dispatch({ type: "CANCEL_COLLAPSE" });
   };
 
   // Gesture callbacks
@@ -68,43 +79,23 @@ function App() {
 
   const handleGestureDetected = (gesture) => {
     console.log("🎭 Gesture detected:", gesture);
-    console.log("📍 Current cursor position:", gestureCursorPos);
-    console.log("📊 Current state:", {
-      draftCubes: state.draftCubes.length,
-      confirmedCubes: state.confirmedCubes.length
-    });
     
     // Connect gestures to actual cube operations
     switch (gesture) {
       case 'pinch':
-        // Place cube at cursor position - trigger placement event
-        console.log("🏗️ Triggering cube placement");
-        // Dispatch custom event for CubeManager to handle
-        window.dispatchEvent(new CustomEvent('gesturePlace'));
+        // Pinch is now handled by simulated mouse events in gesture controller
+        console.log("🤏 Pinch handled by mouse simulation");
         break;
         
       case 'open_palm':
         // Confirm structure
         console.log("✅ Confirming structure");
-        dispatchAction(dispatch, "CONFIRM_DRAFT");
+        dispatch({ type: "CONFIRM_DRAFT" });
         break;
         
       case 'fist':
-        // Delete cube at cursor position
-        console.log("🗑️ Deleting cube at cursor position");
-        // Find cube at cursor position and delete it
-        const allCubes = [...state.draftCubes, ...state.confirmedCubes];
-        const cubeToDelete = allCubes.find(
-          cube => cube.x === gestureCursorPos.x && 
-                 cube.y === gestureCursorPos.y && 
-                 cube.z === gestureCursorPos.z
-        );
-        if (cubeToDelete) {
-          console.log("🎯 Found cube to delete:", cubeToDelete);
-          dispatchAction(dispatch, cubeToDelete.status === "draft" ? "DELETE_DRAFT" : "DELETE_CONFIRMED", { id: cubeToDelete.id });
-        } else {
-          console.log("❌ No cube found at cursor position");
-        }
+        // Fist is now handled by simulated right-click in gesture controller
+        console.log("✊ Fist handled by right-click simulation");
         break;
         
       default:
@@ -117,23 +108,28 @@ function App() {
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#05070d" }}>
+      {/* Virtual Cursor */}
+      <VirtualCursor />
+      
       <SceneCanvas 
         dispatch={dispatch} 
         state={state} 
-        gestureCursorPos={gestureCursorPos}
+        gestureCursorPos={gestureCursorPos} 
         gestureMode={gestureMode}
       />
+      
       <UIOverlay
         currentMaterial={state.currentMaterial}
         onMaterialChange={handleMaterialChange}
-        onConfirm={handleConfirm}
+        onConfirm={() => dispatch({ type: "CONFIRM_DRAFT" })}
         onUndo={handleUndo}
         draftCount={state.draftCubes.length}
         confirmedCount={state.confirmedCubes.length}
         collapseState={state.collapseState}
         onCancelCollapse={handleCancelCollapse}
       />
-      <GestureOverlay
+      
+      <GestureOverlay 
         onCursorUpdate={handleGestureCursorUpdate}
         onGestureDetected={handleGestureDetected}
       />

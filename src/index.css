@@ -1,1 +1,6 @@
 @import "tailwindcss";
+
+/* Hide real cursor for gesture mode */
+body {
+  cursor: none;
+}
