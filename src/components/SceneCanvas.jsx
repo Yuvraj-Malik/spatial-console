@@ -5,11 +5,27 @@ import CubeManager from "./CubeManager";
 import GridHelper from "./GridHelper";
 import GestureCursor from "./GestureCursor";
 
-export default function SceneCanvas({ dispatch, state, gestureCursorPos, gestureMode }) {
+export default function SceneCanvas({
+  dispatch,
+  state,
+  gestureCursorPos,
+  gestureMode,
+  onSceneReady,
+  gestureControllerRef,
+}) {
   return (
     <Canvas
       onContextMenu={(e) => e.preventDefault()}
-      camera={{ position: [6, 6, 6], fov: 50 }}
+      onCreated={({ scene, camera, gl }) => {
+        console.log("🎬 Three.js scene created");
+        if (gestureControllerRef.current) {
+          gestureControllerRef.current.setThreeRefs(scene, camera, gl);
+        }
+        // Trigger scene ready callback
+        if (onSceneReady) {
+          onSceneReady({ scene, camera, renderer: gl });
+        }
+      }}
     >
       {/* Lighting */}
       <ambientLight intensity={0.6} />
@@ -22,7 +38,7 @@ export default function SceneCanvas({ dispatch, state, gestureCursorPos, gesture
       <GridHelper />
 
       {/* Cube Manager */}
-      <CubeManager dispatch={dispatch} state={state} gestureCursorPos={gestureCursorPos} gestureMode={gestureMode} />
+      <CubeManager dispatch={dispatch} state={state} />
 
       {/* Gesture Cursor */}
       <GestureCursor position={gestureCursorPos} visible={gestureMode} />
@@ -35,7 +51,7 @@ export default function SceneCanvas({ dispatch, state, gestureCursorPos, gesture
         mouseButtons={{
           LEFT: null,
           MIDDLE: THREE.MOUSE.DOLLY,
-          RIGHT: THREE.MOUSE.ROTATE
+          RIGHT: THREE.MOUSE.ROTATE,
         }}
       />
     </Canvas>

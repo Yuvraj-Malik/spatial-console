@@ -1,10 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { getMaterialColor } from "../simulation/materials.js";
-import { dispatchAction, createPlaceAction, createDeleteAction } from "../controllers/actionController.js";
+import {
+  dispatchAction,
+  createPlaceAction,
+  createDeleteAction,
+} from "../controllers/actionController.js";
 import Cube from "./Cube";
 import GhostCube from "./GhostCube";
 
-export default function CubeManager({ dispatch, state, gestureCursorPos, gestureMode }) {
+export default function CubeManager({ dispatch, state }) {
   const [ghostPosition, setGhostPosition] = useState([0, 0.5, 0]);
 
   const handleHover = (position) => {
@@ -45,9 +49,10 @@ export default function CubeManager({ dispatch, state, gestureCursorPos, gesture
           // Find cube at position and delete it
           const allCubes = [...state.draftCubes, ...state.confirmedCubes];
           const cubeToDelete = allCubes.find(
-            cube => cube.x === Math.round(point.x) && 
-                   cube.y === 0.5 && 
-                   cube.z === Math.round(point.z)
+            (cube) =>
+              cube.x === Math.round(point.x) &&
+              cube.y === 0.5 &&
+              cube.z === Math.round(point.z),
           );
           if (cubeToDelete) {
             handleDelete(cubeToDelete.id, cubeToDelete.status);
@@ -69,7 +74,7 @@ export default function CubeManager({ dispatch, state, gestureCursorPos, gesture
           isUnstable={state.collapseState.unstableIds.includes(cube.id)}
         />
       ))}
-      
+
       {/* Render draft cubes */}
       {state.draftCubes.map((cube) => (
         <Cube
@@ -80,10 +85,10 @@ export default function CubeManager({ dispatch, state, gestureCursorPos, gesture
           onDelete={() => handleDelete(cube.id, cube.status)}
         />
       ))}
-      
+
       {/* Ghost cube for preview */}
-      <GhostCube 
-        position={ghostPosition} 
+      <GhostCube
+        position={ghostPosition}
         color={getMaterialColor(state.currentMaterial)}
       />
     </>

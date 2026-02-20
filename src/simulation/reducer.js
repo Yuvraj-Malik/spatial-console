@@ -1,5 +1,5 @@
 import { DEFAULT_MATERIAL } from './materials.js';
-import { validateStructure, getUnstableCubeIds } from './structuralEngine.js';
+import { getUnstableCubeIds } from './structuralEngine.js';
 
 // ---- Initial State ----
 export const initialState = {
