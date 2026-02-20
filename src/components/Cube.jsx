@@ -1,7 +1,16 @@
 import { useState } from "react";
-import { getMaterialColor, getMaterialEmissive } from "../simulation/materials.js";
+import {
+  getMaterialColor,
+  getMaterialEmissive,
+} from "../simulation/materials.js";
 
-export default function Cube({ cube, onHover, onPlace, onDelete, isUnstable = false }) {
+export default function Cube({
+  cube,
+  onHover,
+  onPlace,
+  onDelete,
+  isUnstable = false,
+}) {
   const [hovered, setHovered] = useState(false);
 
   const { x, y, z, material, status } = cube;
@@ -9,7 +18,7 @@ export default function Cube({ cube, onHover, onPlace, onDelete, isUnstable = fa
   // Determine cube color based on state
   let cubeColor = getMaterialColor(material);
   let emissiveColor = getMaterialEmissive(material);
-  
+
   if (isUnstable) {
     // Pulsing red effect for unstable cubes
     cubeColor = "#ef4444";
@@ -26,11 +35,7 @@ export default function Cube({ cube, onHover, onPlace, onDelete, isUnstable = fa
         setHovered(true);
 
         const normal = e.face.normal;
-        const newPos = [
-          x + normal.x,
-          y + normal.y,
-          z + normal.z
-        ];
+        const newPos = [x + normal.x, y + normal.y, z + normal.z];
 
         onHover(newPos);
       }}
@@ -40,15 +45,12 @@ export default function Cube({ cube, onHover, onPlace, onDelete, isUnstable = fa
 
         if (e.button === 0) {
           const normal = e.face.normal;
-          const newPos = [
-            x + normal.x,
-            y + normal.y,
-            z + normal.z
-          ];
+          const newPos = [x + normal.x, y + normal.y, z + normal.z];
           onPlace(newPos);
         }
 
         if (e.button === 2) {
+          if (window.__gestureRotateActive) return;
           onDelete();
         }
       }}

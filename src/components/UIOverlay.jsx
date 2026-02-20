@@ -1,20 +1,24 @@
 import { useState } from "react";
-import { MATERIALS, COLOR_PALETTE, createCustomMaterial } from "../simulation/materials.js";
+import {
+  MATERIALS,
+  COLOR_PALETTE,
+  createCustomMaterial,
+} from "../simulation/materials.js";
 
-export default function UIOverlay({ 
-  currentMaterial, 
-  onMaterialChange, 
-  onConfirm, 
+export default function UIOverlay({
+  currentMaterial,
+  onMaterialChange,
+  onConfirm,
   onUndo,
   draftCount,
   confirmedCount,
   collapseState,
-  onCancelCollapse
+  onCancelCollapse,
 }) {
   const [showColorPalette, setShowColorPalette] = useState(false);
 
   return (
-    <div className="absolute top-4 left-4 bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 text-white max-w-sm">
+    <div className="absolute top-4 left-4 z-20 pointer-events-auto bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 text-white max-w-sm">
       {/* Material Selection */}
       <div className="mb-4">
         <h3 className="text-sm font-semibold mb-2 text-gray-300">Material</h3>
@@ -29,14 +33,14 @@ export default function UIOverlay({
                   : "bg-gray-700 text-gray-300 hover:bg-gray-600"
               }`}
               style={{
-                borderLeft: `4px solid ${material.color}`
+                borderLeft: `4px solid ${material.color}`,
               }}
             >
               {material.name}
             </button>
           ))}
         </div>
-        
+
         {/* Custom Color Button */}
         <button
           onClick={() => setShowColorPalette(!showColorPalette)}
@@ -46,7 +50,7 @@ export default function UIOverlay({
               : "bg-gray-700 text-gray-300 hover:bg-gray-600"
           }`}
           style={{
-            borderLeft: `4px solid ${currentMaterial.color}`
+            borderLeft: `4px solid ${currentMaterial.color}`,
           }}
         >
           {currentMaterial.name === "Custom" ? "Custom Color" : "Custom Color"}
@@ -56,7 +60,9 @@ export default function UIOverlay({
       {/* Color Palette */}
       {showColorPalette && (
         <div className="mb-4 p-3 bg-gray-800 rounded">
-          <h3 className="text-xs font-semibold mb-2 text-gray-300">Choose Color</h3>
+          <h3 className="text-xs font-semibold mb-2 text-gray-300">
+            Choose Color
+          </h3>
           <div className="grid grid-cols-6 gap-1">
             {COLOR_PALETTE.map((color) => (
               <button
@@ -99,10 +105,11 @@ export default function UIOverlay({
             ⚠️ Structural Instability Detected!
           </h3>
           <p className="text-xs text-red-200 mb-2">
-            {collapseState.unstableIds.length} cubes will collapse in {collapseState.countdown}s
+            {collapseState.unstableIds.length} cubes will collapse in{" "}
+            {collapseState.countdown}s
           </p>
           <div className="w-full bg-red-950 rounded-full h-2 mb-3">
-            <div 
+            <div
               className="bg-red-500 h-2 rounded-full transition-all duration-1000"
               style={{ width: `${(collapseState.countdown / 3) * 100}%` }}
             />
@@ -129,7 +136,7 @@ export default function UIOverlay({
         >
           Confirm Structure ({draftCount})
         </button>
-        
+
         <button
           onClick={onUndo}
           className="w-full px-4 py-2 bg-gray-600 text-white rounded font-medium text-sm hover:bg-gray-700 transition-all"

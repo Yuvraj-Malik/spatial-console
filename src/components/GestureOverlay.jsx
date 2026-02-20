@@ -3,16 +3,75 @@ import { Hands } from "@mediapipe/hands";
 import { Camera } from "@mediapipe/camera_utils";
 import { GestureController } from "../controllers/gestureController.js";
 
-export default function GestureOverlay({ gestureControllerRef }) {
+const HAND_CONNECTIONS = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [0, 5],
+  [5, 6],
+  [6, 7],
+  [7, 8],
+  [5, 9],
+  [9, 10],
+  [10, 11],
+  [11, 12],
+  [9, 13],
+  [13, 14],
+  [14, 15],
+  [15, 16],
+  [13, 17],
+  [17, 18],
+  [18, 19],
+  [19, 20],
+  [0, 17],
+];
+
+function drawHandLandmarks(ctx, landmarks, width, height) {
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = "#22d3ee";
+  ctx.fillStyle = "#34d399";
+
+  HAND_CONNECTIONS.forEach(([start, end]) => {
+    const s = landmarks[start];
+    const e = landmarks[end];
+
+    ctx.beginPath();
+    ctx.moveTo(s.x * width, s.y * height);
+    ctx.lineTo(e.x * width, e.y * height);
+    ctx.stroke();
+  });
+
+  landmarks.forEach((point, index) => {
+    const x = point.x * width;
+    const y = point.y * height;
+    const radius = index === 8 ? 5 : 3;
+
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+export default function GestureOverlay({
+  gestureControllerRef,
+  onGestureAction,
+}) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const controllerRef = useRef(null);
   const handsRef = useRef(null);
   const cameraRef = useRef(null);
+  const gestureActionRef = useRef(onGestureAction);
 
   const [isActive, setIsActive] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
+  const [activeRole, setActiveRole] = useState("idle");
+
+  useEffect(() => {
+    gestureActionRef.current = onGestureAction;
+  }, [onGestureAction]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -21,6 +80,14 @@ export default function GestureOverlay({ gestureControllerRef }) {
       const controller = new GestureController();
       controllerRef.current = controller;
       gestureControllerRef.current = controller;
+      controller.setActionCallback((action) => {
+        if (gestureActionRef.current) {
+          gestureActionRef.current(action);
+        }
+      });
+      controller.setRoleCallback((role) => {
+        setActiveRole(role);
+      });
 
       const hands = new Hands({
         locateFile: (file) =>
@@ -48,11 +115,16 @@ export default function GestureOverlay({ gestureControllerRef }) {
         );
 
         const landmarks = results.multiHandLandmarks?.[0];
-        if (!landmarks) return;
+        controller.processLandmarks(landmarks);
 
-        controller.updateCursorFromLandmarks(landmarks);
-        controller.detectPinch(landmarks);
-        controller.detectGrip(landmarks);
+        if (landmarks) {
+          drawHandLandmarks(
+            ctx,
+            landmarks,
+            canvasRef.current.width,
+            canvasRef.current.height,
+          );
+        }
 
         setCursorPosition({
           x: Math.round(controller.smoothedX),
@@ -79,6 +151,9 @@ export default function GestureOverlay({ gestureControllerRef }) {
       if (cameraRef.current) {
         cameraRef.current.stop();
       }
+      if (controllerRef.current) {
+        controllerRef.current.endRotateDrag();
+      }
       handsRef.current = null;
       cameraRef.current = null;
       controllerRef.current = null;
@@ -104,7 +179,7 @@ export default function GestureOverlay({ gestureControllerRef }) {
   };
 
   return (
-    <div className="absolute top-4 right-4 bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 text-white max-w-sm w-80">
+    <div className="absolute top-4 right-4 z-20 pointer-events-auto bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 text-white max-w-sm w-80">
       <div className="mb-4">
         <h4 className="text-xs font-semibold mb-1 text-gray-400">
           Camera Feed
@@ -169,14 +244,20 @@ export default function GestureOverlay({ gestureControllerRef }) {
         <div className="text-xs font-mono bg-gray-800 rounded p-2">
           <div>X: {cursorPosition.x}</div>
           <div>Y: {cursorPosition.y}</div>
+          <div className="mt-1 text-cyan-300">
+            ROLE: {activeRole.toUpperCase()}
+          </div>
         </div>
       </div>
 
       <div className="text-xs text-gray-400">
         <div className="font-semibold text-gray-300 mb-1">Gesture Actions:</div>
-        <div>👆 Finger move - Pointer move on canvas</div>
-        <div>🤏 Pinch - Left click</div>
-        <div>🤌 Grip - Right click</div>
+        <div>👆 Point pose - Move cursor / ghost cube</div>
+        <div>🤏 Pinch pulse - Place cube</div>
+        <div>✊ Fist pulse - Delete cube</div>
+        <div>🖐️ Open palm hold - Confirm drafts</div>
+        <div>✌️ V-sign hold - Rotate view</div>
+        <div>👍 / 👎 - Zoom in / out</div>
       </div>
     </div>
   );

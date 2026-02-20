@@ -45,6 +45,7 @@ export default function CubeManager({ dispatch, state }) {
         }}
         onContextMenu={(e) => {
           e.stopPropagation();
+          if (window.__gestureRotateActive) return;
           const point = e.point;
           // Find cube at position and delete it
           const allCubes = [...state.draftCubes, ...state.confirmedCubes];

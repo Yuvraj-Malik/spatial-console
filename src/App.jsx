@@ -1,4 +1,4 @@
-import { useReducer, useRef } from "react";
+import { useCallback, useReducer, useRef } from "react";
 import SceneCanvas from "./components/SceneCanvas";
 import UIOverlay from "./components/UIOverlay";
 import GestureOverlay from "./components/GestureOverlay";
@@ -32,7 +32,7 @@ export default function App() {
   const handleMaterialChange = (material) => {
     dispatch({
       type: "SET_MATERIAL",
-      payload: { material },
+      payload: material,
     });
   };
 
@@ -43,6 +43,15 @@ export default function App() {
   const handleCancelCollapse = () => {
     dispatch({ type: "CANCEL_COLLAPSE" });
   };
+
+  const handleGestureAction = useCallback(
+    (action) => {
+      if (action === "confirm") {
+        dispatch({ type: "CONFIRM_DRAFT" });
+      }
+    },
+    [dispatch],
+  );
 
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#05070d" }}>
@@ -68,7 +77,10 @@ export default function App() {
         onCancelCollapse={handleCancelCollapse}
       />
 
-      <GestureOverlay gestureControllerRef={gestureControllerRef} />
+      <GestureOverlay
+        gestureControllerRef={gestureControllerRef}
+        onGestureAction={handleGestureAction}
+      />
     </div>
   );
 }
