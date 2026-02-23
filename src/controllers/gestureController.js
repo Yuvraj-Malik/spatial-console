@@ -1,5 +1,5 @@
 // gestureController.js
-
+//Implementing all the necessary movements and their indentification logic in this file. This includes pinch, grip, point, open palm, rotate pose, thumbs up and thumbs down gestures. Each gesture will trigger specific actions in the application, such as placing an object, deleting an object, confirming a selection, rotating the view, or zooming in and out.
 export class GestureController {
     constructor() {
         this.renderer = null;
