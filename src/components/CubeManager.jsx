@@ -12,6 +12,7 @@ export default function CubeManager({ dispatch, state }) {
   const [ghostPosition, setGhostPosition] = useState([0, 0.5, 0]);
   const [lineStart, setLineStart] = useState(null);
   const [heightOffset, setHeightOffset] = useState(0);
+  const activeRotation = state.rotationY || 0;
 
   // Reset line start when tool mode changes
   const toolMode = state.viewSettings?.toolMode || "single";
@@ -27,7 +28,7 @@ export default function CubeManager({ dispatch, state }) {
     }
   }, [lineStart]);
 
-  // Listen to key events to cancel or adjust vertical height
+  // Listen to key events to cancel, adjust vertical height, or rotate
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -35,6 +36,11 @@ export default function CubeManager({ dispatch, state }) {
         return;
       }
       
+      if (e.key.toLowerCase() === "r") {
+        dispatch({ type: "ROTATE_Y" });
+        return;
+      }
+
       if (!lineStart) return;
 
       if (e.key === "ArrowUp" || e.key.toLowerCase() === "w") {
@@ -54,7 +60,17 @@ export default function CubeManager({ dispatch, state }) {
   };
 
   const handlePlace = (position) => {
-    const action = createPlaceAction(position, state.currentMaterial);
+    const action = {
+      type: "PLACE_DRAFT",
+      payload: {
+        x: position[0],
+        y: position[1],
+        z: position[2],
+        material: state.currentMaterial,
+        shape: state.currentShape || "cube",
+        rotationY: activeRotation
+      }
+    };
     dispatchAction(dispatch, action.type, action.payload);
   };
 
@@ -63,7 +79,9 @@ export default function CubeManager({ dispatch, state }) {
       x: pos[0],
       y: pos[1],
       z: pos[2],
-      material: state.currentMaterial
+      material: state.currentMaterial,
+      shape: state.currentShape || "cube",
+      rotationY: activeRotation
     }));
     dispatch({
       type: "PLACE_LINE_DRAFT",
@@ -211,6 +229,8 @@ export default function CubeManager({ dispatch, state }) {
           key={`${pos[0]}-${pos[1]}-${pos[2]}-${idx}`}
           position={pos}
           color={getMaterialColor(state.currentMaterial)}
+          shape={state.currentShape || "cube"}
+          rotationY={activeRotation}
         />
       ))}
     </>

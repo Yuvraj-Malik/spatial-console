@@ -3,6 +3,7 @@ import {
   getMaterialColor,
   getMaterialEmissive,
 } from "../simulation/materials.js";
+import { renderShapeGeometry } from "./ShapeRenderer.jsx";
 
 export default function Cube({
   cube,
@@ -15,7 +16,7 @@ export default function Cube({
 }) {
   const [hovered, setHovered] = useState(false);
 
-  const { x, y, z, material, status } = cube;
+  const { x, y, z, material, status, shape = "cube", rotationY = 0 } = cube;
 
   // Determine cube color based on state
   let cubeColor = getMaterialColor(material);
@@ -39,9 +40,12 @@ export default function Cube({
     emissiveColor = "#1d4ed8";
   }
 
+  const rotRad = (rotationY || 0) * (Math.PI / 2);
+
   return (
-    <mesh
+    <group
       position={[x, y, z]}
+      rotation={[0, rotRad, 0]}
       onPointerOver={(e) => {
         e.stopPropagation();
         setHovered(true);
@@ -67,15 +71,7 @@ export default function Cube({
         }
       }}
     >
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial
-        color={cubeColor}
-        transparent={status === "draft"}
-        opacity={status === "draft" ? 0.5 : 1}
-        emissive={emissiveColor}
-        roughness={0.4}
-        metalness={0.6}
-      />
-    </mesh>
+      {renderShapeGeometry(shape, cubeColor, emissiveColor, status === "draft")}
+    </group>
   );
 }

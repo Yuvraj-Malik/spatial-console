@@ -14,6 +14,8 @@ export const initialState = {
     },
     nextId: 1,
     user: null, // NEW: User Account State
+    currentShape: "cube", // NEW: Active geometry shape
+    rotationY: 0, // NEW: Active Y-axis rotation index (0=0, 1=90, 2=180, 3=270)
     // NEW: View settings
     viewSettings: {
         stressHeatmap: false,
@@ -88,6 +90,27 @@ export function simulationReducer(state, action) {
             return {
                 ...state,
                 currentMaterial: action.payload
+            };
+        }
+
+        case "SET_SHAPE": {
+            return {
+                ...state,
+                currentShape: action.payload
+            };
+        }
+
+        case "ROTATE_Y": {
+            return {
+                ...state,
+                rotationY: ((state.rotationY || 0) + 1) % 4
+            };
+        }
+
+        case "SET_ROTATION": {
+            return {
+                ...state,
+                rotationY: action.payload
             };
         }
 

@@ -1,15 +1,13 @@
-export default function GhostCube({ position, color }) {
+import { renderShapeGeometry } from "./ShapeRenderer.jsx";
+
+export default function GhostCube({ position, color, shape = "cube", rotationY = 0 }) {
   if (!position) return null;
 
+  const rotRad = (rotationY || 0) * (Math.PI / 2);
+
   return (
-    <mesh position={position}>
-      <boxGeometry args={[1, 1, 1]} />
-      <meshStandardMaterial
-        color={color}
-        transparent
-        opacity={0.3}
-        emissive={color}
-      />
-    </mesh>
+    <group position={position} rotation={[0, rotRad, 0]}>
+      {renderShapeGeometry(shape, color, color, true)}
+    </group>
   );
 }

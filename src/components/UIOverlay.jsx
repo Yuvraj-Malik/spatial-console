@@ -16,11 +16,68 @@ import {
   loginUserWithEmail,
 } from "../core/firebase.js";
 
+const SHAPE_CATEGORIES = [
+  {
+    id: "shapes",
+    name: "Architectural Shapes",
+    items: [
+      { id: "cube", name: "Standard Cube", emoji: "🧱" },
+      { id: "slab", name: "Half Slab", emoji: "➖" },
+      { id: "quarter", name: "Quarter Slab", emoji: "▫️" },
+      { id: "stair", name: "Stairs", emoji: "🪜" },
+      { id: "ramp", name: "Ramp / Wedge", emoji: "📐" },
+      { id: "pillar", name: "Pillar / Cylinder", emoji: "🏛️" },
+      { id: "sphere", name: "Sphere", emoji: "🟢" },
+    ]
+  },
+  {
+    id: "openings",
+    name: "Openings & Enclosures",
+    items: [
+      { id: "door", name: "Wood Door", emoji: "🚪" },
+      { id: "window", name: "Glass Window", emoji: "🪟" },
+      { id: "fence", name: "Wood Fence", emoji: "🪵" },
+    ]
+  },
+  {
+    id: "furniture",
+    name: "Furniture & Decor",
+    items: [
+      { id: "bed", name: "Bedroom Bed", emoji: "🛏️" },
+      { id: "sofa", name: "Living Couch", emoji: "🛋️" },
+      { id: "chair", name: "Dining Chair", emoji: "🪑" },
+      { id: "table", name: "Coffee Table", emoji: "🪵" },
+      { id: "sink", name: "Kitchen Sink", emoji: "🚰" },
+      { id: "toilet", name: "Bathroom Toilet", emoji: "🚽" },
+    ]
+  },
+  {
+    id: "landscaping",
+    name: "Landscaping & Foliage",
+    items: [
+      { id: "grass_block", name: "Grass Block", emoji: "🌱" },
+      { id: "tree", name: "Forest Tree", emoji: "🌳" },
+      { id: "bush", name: "Green Bush", emoji: "🌿" },
+      { id: "flower", name: "Pink Flower", emoji: "🌸" },
+    ]
+  },
+  {
+    id: "utilities",
+    name: "Infrastructure & Utilities",
+    items: [
+      { id: "pipe", name: "Iron Pipe", emoji: "🛠️" },
+      { id: "lamp", name: "Light Lamp", emoji: "💡" },
+    ]
+  }
+];
+
 export default function UIOverlay({
   state,
   dispatch,
 }) {
   const [activeTab, setActiveTab] = useState("structure");
+  const [subLibraryTab, setSubLibraryTab] = useState("materials"); // "materials" or "shapes"
+  const [activeCategory, setActiveCategory] = useState("shapes"); // "shapes", "openings", "furniture", "landscaping", "utilities"
   const [showColorPalette, setShowColorPalette] = useState(false);
   const [jsonInput, setJsonInput] = useState("");
   const [copied, setCopied] = useState(false);
@@ -153,6 +210,8 @@ export default function UIOverlay({
         y: c.y,
         z: c.z,
         material: c.material,
+        shape: c.shape || "cube",
+        rotationY: c.rotationY || 0,
         status: "confirmed"
       }));
 
@@ -316,6 +375,8 @@ export default function UIOverlay({
       y: c.y,
       z: c.z,
       material: c.material,
+      shape: c.shape || "cube",
+      rotationY: c.rotationY || 0,
       status: "confirmed"
     }));
     const jsonStr = JSON.stringify(cubesToExport);
@@ -340,7 +401,9 @@ export default function UIOverlay({
           x: c.x,
           y: c.y,
           z: c.z,
-          material: c.material
+          material: c.material,
+          shape: c.shape || "cube",
+          rotationY: c.rotationY || 0
         };
       });
 
@@ -583,80 +646,181 @@ export default function UIOverlay({
         {/* TAB 2: LIBRARY & MATERIALS */}
         {activeTab === "materials" && (
           <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Material Presets</h3>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(MATERIALS).map(([key, material]) => (
-                <button
-                  key={key}
-                  onClick={() => dispatch({ type: "SET_MATERIAL", payload: material })}
-                  className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between h-20 relative overflow-hidden cursor-pointer ${
-                    currentMaterial.name === material.name
-                      ? "border-blue-500 bg-blue-950/20 ring-1 ring-blue-500/30"
-                      : "border-slate-800 bg-slate-900/40 hover:bg-slate-900/80"
-                  }`}
-                >
-                  <div className="w-1.5 h-full absolute top-0 left-0" style={{ backgroundColor: material.color }} />
-                  <span className="font-semibold text-xs ml-1">{material.name}</span>
-                  <span className="text-[10px] text-slate-400 font-mono ml-1">{formatCost(material.costPerCube)} / cube</span>
-                </button>
-              ))}
-
-              {/* Custom Material Color Selection */}
+            {/* Sub Tabs: Materials vs Shapes */}
+            <div className="flex bg-slate-950 border border-slate-900 rounded-lg p-0.5 text-[10px]">
               <button
-                onClick={() => setShowColorPalette(!showColorPalette)}
-                className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between h-20 col-span-2 relative overflow-hidden cursor-pointer ${
-                  currentMaterial.name === "Custom"
-                    ? "border-purple-500 bg-purple-950/20 ring-1 ring-purple-500/30"
-                    : "border-slate-800 bg-slate-900/40 hover:bg-slate-900/80"
+                type="button"
+                onClick={() => setSubLibraryTab("materials")}
+                className={`flex-1 py-1.5 text-center font-bold rounded-md transition-all cursor-pointer ${
+                  subLibraryTab === "materials" ? "bg-slate-900 text-blue-400" : "text-slate-500 hover:text-slate-300"
                 }`}
               >
-                <div className="w-1.5 h-full absolute top-0 left-0" style={{ backgroundColor: currentMaterial.name === "Custom" ? currentMaterial.color : "#a855f7" }} />
-                <span className="font-semibold text-xs ml-1">Custom Color Voxel</span>
-                <span className="text-[10px] text-slate-400 ml-1">Configure structural properties with custom hues</span>
+                🎨 Textures & Colors
+              </button>
+              <button
+                type="button"
+                onClick={() => setSubLibraryTab("shapes")}
+                className={`flex-1 py-1.5 text-center font-bold rounded-md transition-all cursor-pointer ${
+                  subLibraryTab === "shapes" ? "bg-slate-900 text-blue-400" : "text-slate-500 hover:text-slate-300"
+                }`}
+              >
+                📐 Architectural Shapes
               </button>
             </div>
 
-            {/* Custom Color Selector Modal */}
-            {showColorPalette && (
-              <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl animate-fadeIn space-y-2">
-                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Select Hex Color</span>
-                <div className="grid grid-cols-7 gap-1">
-                  {COLOR_PALETTE.map((color) => (
+            {subLibraryTab === "materials" ? (
+              <div className="space-y-4">
+                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Material Presets</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(MATERIALS).map(([key, material]) => (
                     <button
-                      key={color}
-                      onClick={() => {
-                        dispatch({ type: "SET_MATERIAL", payload: createCustomMaterial(color) });
-                        setShowColorPalette(false);
-                      }}
-                      className={`w-9 h-9 rounded-lg border-2 transition-all hover:scale-110 cursor-pointer ${
-                        currentMaterial.color === color ? "border-white scale-105" : "border-slate-800"
+                      key={key}
+                      onClick={() => dispatch({ type: "SET_MATERIAL", payload: material })}
+                      className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between h-20 relative overflow-hidden cursor-pointer ${
+                        currentMaterial.name === material.name
+                          ? "border-blue-500 bg-blue-950/20 ring-1 ring-blue-500/30"
+                          : "border-slate-800 bg-slate-900/40 hover:bg-slate-900/80"
                       }`}
-                      style={{ backgroundColor: color }}
-                    />
+                    >
+                      <div className="w-1.5 h-full absolute top-0 left-0" style={{ backgroundColor: material.color }} />
+                      <span className="font-semibold text-xs ml-1">{material.name}</span>
+                      <span className="text-[10px] text-slate-400 font-mono ml-1">{formatCost(material.costPerCube)} / block</span>
+                    </button>
                   ))}
+
+                  {/* Custom Material Color Selection */}
+                  <button
+                    onClick={() => setShowColorPalette(!showColorPalette)}
+                    className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between h-20 col-span-2 relative overflow-hidden cursor-pointer ${
+                      currentMaterial.name === "Custom"
+                        ? "border-purple-500 bg-purple-950/20 ring-1 ring-purple-500/30"
+                        : "border-slate-800 bg-slate-900/40 hover:bg-slate-900/80"
+                    }`}
+                  >
+                    <div className="w-1.5 h-full absolute top-0 left-0" style={{ backgroundColor: currentMaterial.name === "Custom" ? currentMaterial.color : "#a855f7" }} />
+                    <span className="font-semibold text-xs ml-1">Custom Color Voxel</span>
+                    <span className="text-[10px] text-slate-400 ml-1">Configure structural properties with custom hues</span>
+                  </button>
+                </div>
+
+                {/* Custom Color Selector Modal */}
+                {showColorPalette && (
+                  <div className="p-3 bg-slate-900 border border-slate-800 rounded-xl animate-fadeIn space-y-2">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Select Hex Color</span>
+                    <div className="grid grid-cols-7 gap-1">
+                      {COLOR_PALETTE.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => {
+                            dispatch({ type: "SET_MATERIAL", payload: createCustomMaterial(color) });
+                            setShowColorPalette(false);
+                          }}
+                          className={`w-9 h-9 rounded-lg border-2 transition-all hover:scale-110 cursor-pointer ${
+                            currentMaterial.color === color ? "border-white scale-105" : "border-slate-800"
+                          }`}
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Material Specific Specifications Info Panel */}
+                <div className="p-4 bg-slate-900/40 border border-slate-900 rounded-xl space-y-2 text-xs">
+                  <h4 className="font-bold text-slate-300"> Block Specifications ({currentMaterial.name})</h4>
+                  <div className="grid grid-cols-2 gap-y-2 pt-1 border-t border-slate-800/40">
+                    <span className="text-slate-400">Density:</span>
+                    <span className="font-mono font-semibold text-right">{currentMaterial.density.toLocaleString()} kg/m³</span>
+                    <span className="text-slate-400">Base Cost:</span>
+                    <span className="font-mono font-semibold text-right text-blue-400">{formatCost(currentMaterial.costPerCube)}</span>
+                  </div>
                 </div>
               </div>
-            )}
+            ) : (
+              <div className="space-y-4">
+                {/* Active Rotation Indicator */}
+                <div className="p-3 bg-blue-950/20 border border-blue-500/20 rounded-xl flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Object Rotation</span>
+                    <p className="text-xs font-semibold text-blue-400">
+                      {state.rotationY === 0 ? "Facing North (0°)" :
+                       state.rotationY === 1 ? "Facing East (90°)" :
+                       state.rotationY === 2 ? "Facing South (180°)" : "Facing West (270°)"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => dispatch({ type: "ROTATE_Y" })}
+                    className="py-1 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all active:scale-95"
+                  >
+                    🔄 Rotate Y (R)
+                  </button>
+                </div>
 
-            {/* Material Specific Specifications Info Panel */}
-            <div className="p-4 bg-slate-900/40 border border-slate-900 rounded-xl space-y-2 text-xs">
-              <h4 className="font-bold text-slate-300"> Voxel Specifications ({currentMaterial.name})</h4>
-              
-              <div className="grid grid-cols-2 gap-y-2 pt-1 border-t border-slate-800/40">
-                <span className="text-slate-400">Density:</span>
-                <span className="font-mono font-semibold text-right">{currentMaterial.density.toLocaleString()} kg/m³</span>
-                
-                <span className="text-slate-400">Compression Limit:</span>
-                <span className="font-mono font-semibold text-right text-emerald-400">{formatMass(currentMaterial.maxVerticalLoad)}</span>
-                
-                <span className="text-slate-400">Bending Limit:</span>
-                <span className="font-mono font-semibold text-right text-amber-400">{currentMaterial.maxMoment.toLocaleString()} kg·m</span>
-                
-                <span className="text-slate-400">Base Cost:</span>
-                <span className="font-mono font-semibold text-right text-blue-400">{formatCost(currentMaterial.costPerCube)}</span>
+                {/* Category Filter Segments */}
+                <div className="grid grid-cols-5 gap-1 mb-4 bg-slate-950/80 p-1 rounded-xl border border-slate-900">
+                  {[
+                    { id: "shapes", label: "Shapes", emoji: "📐" },
+                    { id: "openings", label: "Openings", emoji: "🚪" },
+                    { id: "furniture", label: "Decor", emoji: "🛋️" },
+                    { id: "landscaping", label: "Garden", emoji: "🌱" },
+                    { id: "utilities", label: "Utility", emoji: "💡" },
+                  ].map((cat) => {
+                    const isActive = activeCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setActiveCategory(cat.id)}
+                        className={`py-1.5 px-0.5 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
+                          isActive
+                            ? "bg-blue-600/15 border border-blue-500/35 text-blue-400 font-extrabold"
+                            : "border border-transparent text-slate-500 hover:text-slate-300 hover:bg-slate-900/30"
+                        }`}
+                      >
+                        <span className="text-base">{cat.emoji}</span>
+                        <span className="text-[8px] uppercase tracking-wider font-bold truncate w-full text-center">
+                          {cat.label}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Selected Category items */}
+                {(() => {
+                  const selectedCat = SHAPE_CATEGORIES.find(c => c.id === activeCategory);
+                  if (!selectedCat) return null;
+                  return (
+                    <div className="space-y-1.5">
+                      <h4 className="text-[9px] uppercase font-black text-slate-500 tracking-wider border-b border-slate-900/60 pb-1">
+                        {selectedCat.name}
+                      </h4>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {selectedCat.items.map((item) => {
+                          const isSelected = (state.currentShape || "cube") === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              type="button"
+                              onClick={() => dispatch({ type: "SET_SHAPE", payload: item.id })}
+                              className={`p-2 rounded-lg border text-left transition-all flex items-center gap-2 cursor-pointer ${
+                                isSelected
+                                  ? "border-blue-500 bg-blue-950/25 ring-1 ring-blue-500/30"
+                                  : "border-slate-800/80 bg-slate-900/40 hover:bg-slate-900/80"
+                              }`}
+                            >
+                              <span className="text-sm">{item.emoji}</span>
+                              <span className="font-bold text-[10px] text-slate-300 truncate">{item.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-            </div>
-
+            )}
           </div>
         )}
 

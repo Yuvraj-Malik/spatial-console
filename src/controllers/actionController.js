@@ -13,7 +13,9 @@ export function dispatchAction(dispatch, type, payload) {
           x: payload.x,
           y: payload.y,
           z: payload.z,
-          material: payload.material
+          material: payload.material,
+          shape: payload.shape || "cube",
+          rotationY: payload.rotationY || 0
         }
       });
       break;
@@ -36,6 +38,13 @@ export function dispatchAction(dispatch, type, payload) {
       dispatch({
         type: "SET_MATERIAL",
         payload: payload.material
+      });
+      break;
+
+    case "SET_SHAPE":
+      dispatch({
+        type: "SET_SHAPE",
+        payload: payload.shape
       });
       break;
       

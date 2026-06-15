@@ -43,6 +43,83 @@ export const MATERIALS = {
     costPerCube: 100,
     maxVerticalLoad: 50000, // kg
     maxMoment: 120000
+  },
+  BRICK: {
+    name: "Brick",
+    color: "#b91c1c",
+    density: 1900,
+    strength: 20,
+    weightFactor: 1.9,
+    emissive: "#450a0a",
+    costPerCube: 30,
+    maxVerticalLoad: 40000,
+    maxMoment: 8000
+  },
+  GLASS: {
+    name: "Glass",
+    color: "#38bdf8",
+    density: 2500,
+    strength: 50,
+    weightFactor: 2.5,
+    emissive: "#0369a1",
+    costPerCube: 70,
+    maxVerticalLoad: 30000,
+    maxMoment: 10000
+  },
+  CARPET: {
+    name: "Carpet",
+    color: "#0ea5e9",
+    density: 300,
+    strength: 5,
+    weightFactor: 0.3,
+    emissive: "#075985",
+    costPerCube: 10,
+    maxVerticalLoad: 5000,
+    maxMoment: 1000
+  },
+  TILES: {
+    name: "Tiles",
+    color: "#0d9488",
+    density: 2200,
+    strength: 40,
+    weightFactor: 2.2,
+    emissive: "#115e59",
+    costPerCube: 40,
+    maxVerticalLoad: 60000,
+    maxMoment: 5000
+  },
+  MARBLE: {
+    name: "Marble",
+    color: "#e2e8f0",
+    density: 2700,
+    strength: 80,
+    weightFactor: 2.7,
+    emissive: "#475569",
+    costPerCube: 200,
+    maxVerticalLoad: 100000,
+    maxMoment: 30000
+  },
+  GRASS: {
+    name: "Grass",
+    color: "#22c55e",
+    density: 1200,
+    strength: 10,
+    weightFactor: 1.2,
+    emissive: "#166534",
+    costPerCube: 5,
+    maxVerticalLoad: 10000,
+    maxMoment: 2000
+  },
+  WATER: {
+    name: "Water",
+    color: "#3b82f6",
+    density: 1000,
+    strength: 0,
+    weightFactor: 1.0,
+    emissive: "#1e40af",
+    costPerCube: 2,
+    maxVerticalLoad: 0,
+    maxMoment: 0
   }
 };
 
