@@ -178,14 +178,15 @@ export async function getSavedStructures(userId) {
   if (firebaseEnabled && db) {
     const q = query(
       collection(db, "structures"),
-      where("userId", "==", userId),
-      orderBy("createdAt", "desc")
+      where("userId", "==", userId)
     );
     const querySnapshot = await getDocs(q);
     const list = [];
     querySnapshot.forEach((doc) => {
       list.push({ id: doc.id, ...doc.data() });
     });
+    // Sort in memory to avoid index requirement
+    list.sort((a, b) => b.createdAt - a.createdAt);
     return list;
   } else {
     // Get from localStorage

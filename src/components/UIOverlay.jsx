@@ -1046,7 +1046,15 @@ export default function UIOverlay({
 
             {/* Generated Share Link Box */}
             {shareUrl && (
-              <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl animate-fadeIn space-y-2">
+              <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl animate-fadeIn space-y-2 relative">
+                <button
+                  type="button"
+                  onClick={() => setShareUrl("")}
+                  className="absolute top-3 right-3 text-slate-500 hover:text-slate-300 cursor-pointer text-[10px] font-bold w-4.5 h-4.5 flex items-center justify-center rounded-full hover:bg-slate-800 transition-all"
+                  title="Close"
+                >
+                  ✕
+                </button>
                 <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider block">🔗 Project Share Link</span>
                 <p className="text-[10px] text-slate-400 leading-normal">
                   Anyone with this link can view and test your 3D structure:
