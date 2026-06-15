@@ -1,4 +1,4 @@
-import { useCallback, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import SceneCanvas from "./components/SceneCanvas";
 import UIOverlay from "./components/UIOverlay";
 import GestureOverlay from "./components/GestureOverlay";
@@ -29,20 +29,35 @@ export default function App() {
   const gestureMode = false;
   const gestureControllerRef = useRef(null);
 
-  const handleMaterialChange = (material) => {
-    dispatch({
-      type: "SET_MATERIAL",
-      payload: material,
-    });
-  };
+  // Collapse countdown timer loop
+  useEffect(() => {
+    if (!state.collapseState.warningActive) return;
 
-  const handleUndo = () => {
-    dispatch({ type: "UNDO" });
-  };
+    const timer = setInterval(() => {
+      if (state.collapseState.countdown > 1) {
+        dispatch({
+          type: "UPDATE_COUNTDOWN",
+          payload: { countdown: state.collapseState.countdown - 1 }
+        });
+      } else {
+        dispatch({ type: "COLLAPSE" });
+      }
+    }, 1000);
 
-  const handleCancelCollapse = () => {
-    dispatch({ type: "CANCEL_COLLAPSE" });
-  };
+    return () => clearInterval(timer);
+  }, [state.collapseState.warningActive, state.collapseState.countdown]);
+
+  // Keyboard shortcut listener (Ctrl+Z for Undo)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        dispatch({ type: "UNDO" });
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [dispatch]);
 
   const handleGestureAction = useCallback(
     (action) => {
@@ -67,14 +82,8 @@ export default function App() {
       />
 
       <UIOverlay
-        currentMaterial={state.currentMaterial}
-        onMaterialChange={handleMaterialChange}
-        onConfirm={() => dispatch({ type: "CONFIRM_DRAFT" })}
-        onUndo={handleUndo}
-        draftCount={state.draftCubes.length}
-        confirmedCount={state.confirmedCubes.length}
-        collapseState={state.collapseState}
-        onCancelCollapse={handleCancelCollapse}
+        state={state}
+        dispatch={dispatch}
       />
 
       <GestureOverlay

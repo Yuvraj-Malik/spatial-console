@@ -10,6 +10,8 @@ export default function Cube({
   onPlace,
   onDelete,
   isUnstable = false,
+  stressHeatmapEnabled = false,
+  stressRatio = 0,
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -19,7 +21,17 @@ export default function Cube({
   let cubeColor = getMaterialColor(material);
   let emissiveColor = getMaterialEmissive(material);
 
-  if (isUnstable) {
+  if (status === "confirmed" && stressHeatmapEnabled) {
+    if (stressRatio > 1.0) {
+      cubeColor = "#ef4444"; // Pulsing/bright red for overloaded
+      emissiveColor = "#7f1d1d";
+    } else {
+      // HSL: 120 is green, 60 is yellow, 0 is red
+      const hue = Math.max(0, Math.min(120, (1 - stressRatio) * 120));
+      cubeColor = `hsl(${hue}, 85%, 45%)`;
+      emissiveColor = `hsl(${hue}, 85%, 20%)`;
+    }
+  } else if (isUnstable) {
     // Pulsing red effect for unstable cubes
     cubeColor = "#ef4444";
     emissiveColor = hovered ? "#dc2626" : "#991b1b";

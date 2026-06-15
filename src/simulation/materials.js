@@ -6,7 +6,10 @@ export const MATERIALS = {
     density: 7850, // kg/m³
     strength: 250, // MPa
     weightFactor: 7.85,
-    emissive: "#1e293b"
+    emissive: "#1e293b",
+    costPerCube: 150,
+    maxVerticalLoad: 120000, // kg
+    maxMoment: 400000 // kg * units (bending moment capacity)
   },
   CONCRETE: {
     name: "Concrete",
@@ -14,7 +17,10 @@ export const MATERIALS = {
     density: 2400, // kg/m³
     strength: 30, // MPa
     weightFactor: 2.4,
-    emissive: "#334155"
+    emissive: "#334155",
+    costPerCube: 50,
+    maxVerticalLoad: 90000, // kg
+    maxMoment: 15000 // Concrete fails very quickly under bending/shear
   },
   WOOD: {
     name: "Wood",
@@ -22,7 +28,10 @@ export const MATERIALS = {
     density: 600, // kg/m³
     strength: 40, // MPa
     weightFactor: 0.6,
-    emissive: "#451a03"
+    emissive: "#451a03",
+    costPerCube: 20,
+    maxVerticalLoad: 18000, // kg
+    maxMoment: 20000
   },
   ALUMINUM: {
     name: "Aluminum",
@@ -30,7 +39,10 @@ export const MATERIALS = {
     density: 2700, // kg/m³
     strength: 90, // MPa
     weightFactor: 2.7,
-    emissive: "#374151"
+    emissive: "#374151",
+    costPerCube: 100,
+    maxVerticalLoad: 50000, // kg
+    maxMoment: 120000
   }
 };
 
@@ -89,7 +101,10 @@ export function createCustomMaterial(color) {
     density: 1000, // Default density
     strength: 50,  // Default strength
     weightFactor: 1.0,
-    emissive: adjustColorBrightness(color, -30)
+    emissive: adjustColorBrightness(color, -30),
+    costPerCube: 40,
+    maxVerticalLoad: 30000, // kg
+    maxMoment: 40000
   };
 }
 

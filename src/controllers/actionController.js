@@ -62,6 +62,44 @@ export function dispatchAction(dispatch, type, payload) {
         type: "CANCEL_COLLAPSE"
       });
       break;
+
+    case "LOAD_TEMPLATE":
+      dispatch({
+        type: "LOAD_TEMPLATE",
+        payload: { cubes: payload.cubes }
+      });
+      break;
+
+    case "LOAD_JSON":
+      dispatch({
+        type: "LOAD_JSON",
+        payload: { cubes: payload.cubes }
+      });
+      break;
+
+    case "CLEAR_SCENE":
+      dispatch({
+        type: "CLEAR_SCENE"
+      });
+      break;
+
+    case "TOGGLE_STRESS_HEATMAP":
+      dispatch({
+        type: "TOGGLE_STRESS_HEATMAP"
+      });
+      break;
+
+    case "TOGGLE_GRID":
+      dispatch({
+        type: "TOGGLE_GRID"
+      });
+      break;
+
+    case "TOGGLE_AUTO_ROTATE":
+      dispatch({
+        type: "TOGGLE_AUTO_ROTATE"
+      });
+      break;
       
     default:
       console.warn(`Unknown action type: ${type}`);

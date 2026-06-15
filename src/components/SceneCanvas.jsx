@@ -13,10 +13,19 @@ export default function SceneCanvas({
   onSceneReady,
   gestureControllerRef,
 }) {
+  const initialCameraPosition = [14, 18, 14];
+
   return (
     <Canvas
+      camera={{
+        position: initialCameraPosition,
+        fov: 50,
+        near: 0.1,
+        far: 1000,
+      }}
       onContextMenu={(e) => e.preventDefault()}
       onCreated={({ scene, camera, gl }) => {
+        camera.lookAt(0, 0, 0);
         console.log("🎬 Three.js scene created");
         if (gestureControllerRef.current) {
           gestureControllerRef.current.setThreeRefs(scene, camera, gl);
@@ -35,7 +44,7 @@ export default function SceneCanvas({
       <color attach="background" args={["#0d1324"]} />
 
       {/* Grid Helper */}
-      <GridHelper />
+      {state.viewSettings?.showGrid !== false && <GridHelper />}
 
       {/* Cube Manager */}
       <CubeManager dispatch={dispatch} state={state} />
@@ -48,6 +57,10 @@ export default function SceneCanvas({
         enablePan={true}
         enableZoom={true}
         enableRotate={true}
+        autoRotate={state.viewSettings?.autoRotate || false}
+        autoRotateSpeed={0.8}
+        target={[0, 0, 0]}
+        maxPolarAngle={Math.PI / 2 - 0.05}
         mouseButtons={{
           LEFT: null,
           MIDDLE: THREE.MOUSE.DOLLY,

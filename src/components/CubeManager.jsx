@@ -73,6 +73,8 @@ export default function CubeManager({ dispatch, state }) {
           onPlace={handlePlace}
           onDelete={() => handleDelete(cube.id, cube.status)}
           isUnstable={state.collapseState.unstableIds.includes(cube.id)}
+          stressHeatmapEnabled={state.viewSettings?.stressHeatmap}
+          stressRatio={state.structuralMetrics?.stresses?.[cube.id]?.stressRatio || 0}
         />
       ))}
 
