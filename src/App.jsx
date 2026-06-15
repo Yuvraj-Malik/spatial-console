@@ -3,6 +3,8 @@ import SceneCanvas from "./components/SceneCanvas";
 import UIOverlay from "./components/UIOverlay";
 import GestureOverlay from "./components/GestureOverlay";
 import { simulationReducer, initialState } from "./simulation/reducer.js";
+import { auth, getLocalUser, loadStructureById, firebaseEnabled } from "./core/firebase.js";
+import { onAuthStateChanged } from "firebase/auth";
 
 // Virtual Cursor Component
 function VirtualCursor() {
@@ -28,6 +30,60 @@ export default function App() {
   const gestureCursorPos = { x: 0, y: 0.5, z: 0 };
   const gestureMode = false;
   const gestureControllerRef = useRef(null);
+
+  // Listen to Auth State Changes
+  useEffect(() => {
+    // Check local user fallback first if firebase is not initialized
+    const localUser = getLocalUser();
+    if (localUser && !firebaseEnabled) {
+      dispatch({ type: "SET_USER", payload: localUser });
+    }
+
+    if (firebaseEnabled && auth) {
+      const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          dispatch({
+            type: "SET_USER",
+            payload: {
+              uid: firebaseUser.uid,
+              displayName: firebaseUser.displayName,
+              email: firebaseUser.email,
+              photoURL: firebaseUser.photoURL
+            }
+          });
+        } else {
+          dispatch({ type: "SET_USER", payload: null });
+        }
+      });
+      return () => unsubscribe();
+    }
+  }, [dispatch]);
+
+  // Handle Loading Shared Blueprints from URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const shareId = params.get("share");
+    if (shareId) {
+      console.log(`🔗 Detected share ID in URL: ${shareId}`);
+      
+      const loadShared = async () => {
+        try {
+          const data = await loadStructureById(shareId);
+          if (data && data.cubes) {
+            dispatch({ type: "LOAD_JSON", payload: { cubes: data.cubes } });
+            console.log("✓ Loaded shared structure:", data.name);
+          }
+        } catch (error) {
+          console.error("Failed to load shared structure:", error);
+          alert("Error loading shared structure. It may have been deleted.");
+        }
+      };
+      
+      // Delay slightly to ensure canvas is ready
+      const timer = setTimeout(loadShared, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [dispatch]);
 
   // Collapse countdown timer loop
   useEffect(() => {

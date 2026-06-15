@@ -114,6 +114,13 @@ export function dispatchAction(dispatch, type, payload) {
         payload: { toolMode: payload.toolMode }
       });
       break;
+
+    case "SET_USER":
+      dispatch({
+        type: "SET_USER",
+        payload: payload.user
+      });
+      break;
       
     default:
       console.warn(`Unknown action type: ${type}`);

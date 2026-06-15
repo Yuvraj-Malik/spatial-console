@@ -1,10 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MATERIALS,
   COLOR_PALETTE,
   createCustomMaterial,
 } from "../simulation/materials.js";
 import { TEMPLATES } from "../simulation/templates.js";
+import {
+  loginWithGoogle,
+  logoutUser,
+  saveStructure,
+  getSavedStructures,
+  deleteStructure,
+  firebaseEnabled,
+  registerUserWithEmail,
+  loginUserWithEmail,
+} from "../core/firebase.js";
 
 export default function UIOverlay({
   state,
@@ -15,6 +25,22 @@ export default function UIOverlay({
   const [jsonInput, setJsonInput] = useState("");
   const [copied, setCopied] = useState(false);
   const [importError, setImportError] = useState("");
+
+  // Cloud database states
+  const [savedDesigns, setSavedDesigns] = useState([]);
+  const [designName, setDesignName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [isLoadingList, setIsLoadingList] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
+  const [copiedShareLink, setCopiedShareLink] = useState(false);
+
+  // Email/Password auth states
+  const [authMode, setAuthMode] = useState("login"); // "login" or "register"
+  const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [usernameInput, setUsernameInput] = useState("");
+  const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
 
   const {
     currentMaterial,
@@ -39,6 +65,139 @@ export default function UIOverlay({
 
   const formatCost = (val) => {
     return `$${val.toLocaleString()}`;
+  };
+
+  // Load saved designs from Cloud/Local Storage
+  const loadUserDesigns = async () => {
+    if (!state.user) return;
+    setIsLoadingList(true);
+    try {
+      const list = await getSavedStructures(state.user.uid);
+      setSavedDesigns(list);
+    } catch (e) {
+      console.error("Failed to load designs:", e);
+    } finally {
+      setIsLoadingList(false);
+    }
+  };
+
+  // Trigger loading list when tab is selected or user state updates
+  useEffect(() => {
+    if (state.user && activeTab === "database") {
+      loadUserDesigns();
+    }
+  }, [state.user, activeTab]);
+
+  const handleLogin = async () => {
+    try {
+      const u = await loginWithGoogle();
+      dispatch({ type: "SET_USER", payload: u });
+    } catch (e) {
+      console.error("Login failed:", e);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      dispatch({ type: "SET_USER", payload: null });
+      setSavedDesigns([]);
+      setShareUrl("");
+    } catch (e) {
+      console.error("Logout failed:", e);
+    }
+  };
+
+  const handleEmailAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      let u;
+      if (authMode === "register") {
+        if (!usernameInput.trim()) {
+          throw new Error("Username is required.");
+        }
+        u = await registerUserWithEmail(
+          emailInput,
+          passwordInput,
+          usernameInput.trim()
+        );
+      } else {
+        u = await loginUserWithEmail(emailInput, passwordInput);
+      }
+      dispatch({ type: "SET_USER", payload: u });
+      setEmailInput("");
+      setPasswordInput("");
+      setUsernameInput("");
+    } catch (err) {
+      console.error("Email auth failed:", err);
+      setAuthError(err.message || "Authentication failed. Please check credentials.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    if (!designName.trim()) return;
+    if (confirmedCubes.length === 0) {
+      alert("Please place and confirm blocks first before saving!");
+      return;
+    }
+    
+    setIsSaving(true);
+    try {
+      const cubesToSave = confirmedCubes.map(c => ({
+        x: c.x,
+        y: c.y,
+        z: c.z,
+        material: c.material,
+        status: "confirmed"
+      }));
+
+      const designId = await saveStructure(
+        state.user,
+        designName,
+        cubesToSave,
+        structuralMetrics
+      );
+
+      await loadUserDesigns();
+      setDesignName("");
+      alert("✓ Design saved successfully!");
+    } catch (err) {
+      console.error("Failed to save design:", err);
+      alert("Error saving design. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleLoadDesign = (design) => {
+    dispatch({ type: "LOAD_JSON", payload: { cubes: design.cubes } });
+    const url = `${window.location.origin}${window.location.pathname}?share=${design.id}`;
+    setShareUrl(url);
+  };
+
+  const handleDeleteDesign = async (designId, e) => {
+    e.stopPropagation();
+    if (!confirm("Are you sure you want to delete this design?")) return;
+    try {
+      await deleteStructure(designId);
+      await loadUserDesigns();
+      if (shareUrl.includes(designId)) {
+        setShareUrl("");
+      }
+    } catch (err) {
+      console.error("Delete failed:", err);
+    }
+  };
+
+  const handleCopyShareLink = () => {
+    navigator.clipboard.writeText(shareUrl);
+    setCopiedShareLink(true);
+    setTimeout(() => setCopiedShareLink(false), 2000);
   };
 
   // Determine structural status
@@ -210,11 +369,12 @@ export default function UIOverlay({
       </div>
 
       {/* Tabs Selection Bar */}
-      <div className="flex border-b border-slate-900 bg-slate-950/50 text-xs">
+      <div className="flex border-b border-slate-900 bg-slate-950/50 text-[10px]">
         {[
           { id: "structure", label: "Telemetry" },
           { id: "materials", label: "Library" },
           { id: "templates", label: "Templates" },
+          { id: "database", label: "Cloud" },
           { id: "settings", label: "Console" },
         ].map((tab) => (
           <button
@@ -627,6 +787,286 @@ export default function UIOverlay({
                 </button>
               </div>
             </div>
+
+          </div>
+        )}
+
+        {/* TAB 5: DATABASE & CLOUD SYNC */}
+        {activeTab === "database" && (
+          <div className="space-y-4">
+            
+            {/* User Profile / Login Card */}
+            {!state.user ? (
+              <div className="p-4 bg-slate-900/40 border border-slate-900 rounded-xl space-y-3">
+                <div className="text-center pb-1">
+                  <div className="w-10 h-10 bg-slate-850 border border-slate-800 rounded-full flex items-center justify-center mx-auto text-lg mb-1 shadow-inner">
+                    👤
+                  </div>
+                  <h3 className="font-bold text-sm text-slate-200">Cloud Sync Console</h3>
+                  <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                    Authenticate to access the spatial blueprints database.
+                  </p>
+                </div>
+
+                {/* Tab Switcher */}
+                <div className="flex border-b border-slate-850/80 text-[11px] mb-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("login");
+                      setAuthError("");
+                    }}
+                    className={`flex-1 pb-2 text-center font-bold transition-all cursor-pointer ${
+                      authMode === "login"
+                        ? "text-blue-400 border-b-2 border-blue-500"
+                        : "text-slate-500 hover:text-slate-300"
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAuthMode("register");
+                      setAuthError("");
+                    }}
+                    className={`flex-1 pb-2 text-center font-bold transition-all cursor-pointer ${
+                      authMode === "register"
+                        ? "text-blue-400 border-b-2 border-blue-500"
+                        : "text-slate-500 hover:text-slate-300"
+                    }`}
+                  >
+                    Register
+                  </button>
+                </div>
+
+                {/* Form Fields */}
+                <form onSubmit={handleEmailAuthSubmit} className="space-y-2.5">
+                  {authMode === "register" && (
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Username</label>
+                      <input
+                        type="text"
+                        value={usernameInput}
+                        onChange={(e) => setUsernameInput(e.target.value)}
+                        placeholder="e.g. spatial_builder_9"
+                        required
+                        className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                      />
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Email Address</label>
+                    <input
+                      type="email"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      placeholder="e.g. name@domain.com"
+                      required
+                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Password</label>
+                    <input
+                      type="password"
+                      value={passwordInput}
+                      onChange={(e) => setPasswordInput(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      minLength={6}
+                      className="w-full px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  {authError && (
+                    <p className="text-[10px] text-red-400 bg-red-950/20 border border-red-900/30 p-2 rounded-lg leading-relaxed">
+                      ⚠️ {authError}
+                    </p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                  >
+                    {authLoading ? (
+                      <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : null}
+                    {authMode === "login" ? "🔑 Log In" : "📝 Create Account"}
+                  </button>
+                </form>
+
+                {/* Divider */}
+                <div className="relative my-3 flex py-1 items-center">
+                  <div className="flex-grow border-t border-slate-850" />
+                  <span className="flex-shrink mx-2 text-[9px] uppercase font-bold text-slate-500 tracking-wider">or</span>
+                  <div className="flex-grow border-t border-slate-850" />
+                </div>
+
+                {/* Google Sign-in */}
+                <button
+                  type="button"
+                  onClick={handleLogin}
+                  className="w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
+                    <path
+                      fill="currentColor"
+                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
+                    />
+                    <path
+                      fill="currentColor"
+                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
+                    />
+                  </svg>
+                  Sign In with Google
+                </button>
+
+                {!firebaseEnabled && (
+                  <p className="text-[9px] text-amber-400/90 text-center italic mt-1.5">
+                    ℹ️ Running in Local Storage Sandbox mode.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="p-4 bg-slate-900/40 border border-slate-900 rounded-xl space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-800/40 pb-3">
+                  <div className="flex items-center gap-2.5">
+                    <img
+                      src={state.user.photoURL || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"}
+                      alt="Avatar"
+                      className="w-8 h-8 rounded-full border border-slate-700"
+                    />
+                    <div>
+                      <h4 className="font-bold text-xs text-slate-200 truncate max-w-[120px]">{state.user.displayName}</h4>
+                      <p className="text-[9px] text-slate-400 truncate max-w-[120px]">{state.user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="px-2.5 py-1 border border-slate-800 hover:bg-slate-900/60 rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+
+                {/* Save Current Design Section */}
+                {confirmedCount > 0 ? (
+                  <form onSubmit={handleSave} className="space-y-2 pt-1">
+                    <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Save Current Design</span>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={designName}
+                        onChange={(e) => setDesignName(e.target.value)}
+                        placeholder="e.g. My suspension bridge"
+                        required
+                        maxLength={40}
+                        className="flex-1 px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-xs text-slate-300 focus:outline-none focus:border-blue-500"
+                      />
+                      <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="px-4 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
+                      >
+                        {isSaving ? "..." : "💾 Save"}
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <div className="p-3 bg-slate-950/40 border border-slate-900 rounded-lg text-[10px] text-slate-400 text-center">
+                    * Place and confirm blocks to enable saving!
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* List of Saved Projects */}
+            {state.user && (
+              <div className="space-y-2.5">
+                <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Your Saved Projects</span>
+                
+                {isLoadingList ? (
+                  <p className="text-xs text-slate-400 text-center py-5">Loading project database...</p>
+                ) : savedDesigns.length === 0 ? (
+                  <p className="text-xs text-slate-500 text-center py-5 italic bg-slate-950/20 border border-slate-900/50 rounded-xl">
+                    No designs saved in this account yet.
+                  </p>
+                ) : (
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {savedDesigns.map((design) => (
+                      <div
+                        key={design.id}
+                        onClick={() => handleLoadDesign(design)}
+                        className="p-3 bg-slate-900/30 hover:bg-slate-900/70 border border-slate-900 hover:border-slate-800/80 rounded-xl flex items-center justify-between gap-3 cursor-pointer transition-all active:scale-99"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-xs text-slate-200 truncate">{design.name}</h4>
+                          <span className="text-[9px] text-slate-500 font-mono">
+                            {new Date(design.createdAt).toLocaleDateString()} • {design.cubes.length} blocks
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              const url = `${window.location.origin}${window.location.pathname}?share=${design.id}`;
+                              setShareUrl(url);
+                            }}
+                            title="Generate Shareable Link"
+                            className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-blue-400 transition-all"
+                          >
+                            🔗
+                          </button>
+                          <button
+                            onClick={(e) => handleDeleteDesign(design.id, e)}
+                            title="Delete Project"
+                            className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-red-400 transition-all"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Generated Share Link Box */}
+            {shareUrl && (
+              <div className="p-3.5 bg-slate-900 border border-slate-800 rounded-xl animate-fadeIn space-y-2">
+                <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider block">🔗 Project Share Link</span>
+                <p className="text-[10px] text-slate-400 leading-normal">
+                  Anyone with this link can view and test your 3D structure:
+                </p>
+                <div className="flex gap-1">
+                  <input
+                    type="text"
+                    readOnly
+                    value={shareUrl}
+                    className="flex-1 px-2.5 py-1 bg-slate-950 border border-slate-850 rounded text-[10px] font-mono text-slate-400 focus:outline-none animate-pulse"
+                  />
+                  <button
+                    onClick={handleCopyShareLink}
+                    className="px-3 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded transition-all cursor-pointer active:scale-95"
+                  >
+                    {copiedShareLink ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              </div>
+            )}
 
           </div>
         )}

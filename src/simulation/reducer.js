@@ -13,6 +13,7 @@ export const initialState = {
         countdown: 3
     },
     nextId: 1,
+    user: null, // NEW: User Account State
     // NEW: View settings
     viewSettings: {
         stressHeatmap: false,
@@ -35,6 +36,13 @@ export const initialState = {
 // ---- Reducer ----
 export function simulationReducer(state, action) {
     switch (action.type) {
+
+        case "SET_USER": {
+            return {
+                ...state,
+                user: action.payload
+            };
+        }
 
         case "PLACE_DRAFT": {
             const newCube = {
