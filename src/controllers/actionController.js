@@ -100,6 +100,20 @@ export function dispatchAction(dispatch, type, payload) {
         type: "TOGGLE_AUTO_ROTATE"
       });
       break;
+
+    case "PLACE_LINE_DRAFT":
+      dispatch({
+        type: "PLACE_LINE_DRAFT",
+        payload: { cubes: payload.cubes }
+      });
+      break;
+
+    case "SET_TOOL_MODE":
+      dispatch({
+        type: "SET_TOOL_MODE",
+        payload: { toolMode: payload.toolMode }
+      });
+      break;
       
     default:
       console.warn(`Unknown action type: ${type}`);

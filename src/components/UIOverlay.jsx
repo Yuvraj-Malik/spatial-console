@@ -46,7 +46,7 @@ export default function UIOverlay({
   let statusColor = "bg-slate-500 text-slate-100 border-slate-400";
   
   if (totalCount > 0) {
-    if (collapseState.warningActive || structuralMetrics.unstableIds.length > 0) {
+    if (collapseState.warningActive || (structuralMetrics?.unstableIds || []).length > 0) {
       statusText = "COLLAPSE IMMINENT";
       statusColor = "bg-red-500/20 text-red-400 border-red-500/50 animate-pulse";
     } else if (structuralMetrics.safetyFactor < 1.0) {
@@ -198,10 +198,10 @@ export default function UIOverlay({
       <div className="p-5 border-b border-slate-800/80 flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-            VoxelForge 3D
+            Spatial Console
           </h1>
           <p className="text-xs text-slate-400 uppercase tracking-widest font-medium">
-            Structural Console
+            3D Structural Suite
           </p>
         </div>
         <div className={`px-2 py-0.5 text-[10px] font-bold tracking-wider rounded border ${statusColor}`}>
@@ -273,6 +273,38 @@ export default function UIOverlay({
                 <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Confirmed</span>
                 <p className="text-lg font-bold text-indigo-400 font-mono mt-0.5">{confirmedCount}</p>
               </div>
+            </div>
+
+            {/* Tool Mode Selection */}
+            <div className="p-3 bg-slate-900/40 border border-slate-900 rounded-xl space-y-2">
+              <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Placement Mode</span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => dispatch({ type: "SET_TOOL_MODE", payload: { toolMode: "single" } })}
+                  className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                    (viewSettings?.toolMode || "single") === "single"
+                      ? "bg-blue-600/25 text-blue-400 border-blue-500/50"
+                      : "bg-slate-950/40 text-slate-400 border-slate-900 hover:text-slate-200"
+                  }`}
+                >
+                  🧱 Single Voxel
+                </button>
+                <button
+                  onClick={() => dispatch({ type: "SET_TOOL_MODE", payload: { toolMode: "line" } })}
+                  className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                    viewSettings?.toolMode === "line"
+                      ? "bg-blue-600/25 text-blue-400 border-blue-500/50"
+                      : "bg-slate-950/40 text-slate-400 border-slate-900 hover:text-slate-200"
+                  }`}
+                >
+                  📏 Line / Beam
+                </button>
+              </div>
+              {viewSettings?.toolMode === "line" && (
+                <p className="text-[10px] text-slate-400 italic">
+                  * Click start position &rarr; hover to preview beam along axis &rarr; click again to place. Esc to cancel.
+                </p>
+              )}
             </div>
 
             {/* Safety Factor & Mass/Cost Stats */}

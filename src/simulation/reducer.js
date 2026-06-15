@@ -17,7 +17,8 @@ export const initialState = {
     viewSettings: {
         stressHeatmap: false,
         showGrid: true,
-        autoRotate: false
+        autoRotate: false,
+        toolMode: "single" // "single" or "line"
     },
     // NEW: Pre-calculated metrics
     structuralMetrics: {
@@ -26,7 +27,8 @@ export const initialState = {
         maxHeight: 0,
         safetyFactor: Infinity,
         centerOfMass: { x: 0, y: 0, z: 0 },
-        stresses: {}
+        stresses: {},
+        unstableIds: []
     }
 };
 
@@ -46,6 +48,21 @@ export function simulationReducer(state, action) {
                 draftCubes: [...state.draftCubes, newCube],
                 history: [...state.history, action],
                 nextId: state.nextId + 1
+            };
+        }
+
+        case "PLACE_LINE_DRAFT": {
+            const cubes = action.payload.cubes.map((c, index) => ({
+                id: state.nextId + index,
+                ...c,
+                status: "draft"
+            }));
+
+            return {
+                ...state,
+                draftCubes: [...state.draftCubes, ...cubes],
+                history: [...state.history, action],
+                nextId: state.nextId + cubes.length
             };
         }
 
@@ -108,6 +125,16 @@ export function simulationReducer(state, action) {
                     draftCubes: state.draftCubes.slice(0, -1),
                     history: newHistory,
                     nextId: state.nextId - 1
+                };
+            }
+
+            if (lastAction.type === "PLACE_LINE_DRAFT") {
+                const count = lastAction.payload.cubes.length;
+                return {
+                    ...state,
+                    draftCubes: state.draftCubes.slice(0, -count),
+                    history: newHistory,
+                    nextId: state.nextId - count
                 };
             }
 
@@ -341,6 +368,16 @@ export function simulationReducer(state, action) {
                     warningActive: false,
                     unstableIds: [],
                     countdown: 3
+                }
+            };
+        }
+
+        case "SET_TOOL_MODE": {
+            return {
+                ...state,
+                viewSettings: {
+                    ...state.viewSettings,
+                    toolMode: action.payload.toolMode
                 }
             };
         }
