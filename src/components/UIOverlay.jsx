@@ -269,18 +269,18 @@ export default function UIOverlay({
 
   // Determine structural status
   let statusText = "Empty Scene";
-  let statusColor = "bg-slate-500 text-slate-100 border-slate-400";
+  let statusColor = "bg-[#1c1e24] text-slate-400 border-[#2a2d34]";
   
   if (totalCount > 0) {
     if (collapseState.warningActive || (structuralMetrics?.unstableIds || []).length > 0) {
       statusText = "COLLAPSE IMMINENT";
-      statusColor = "bg-red-500/20 text-red-400 border-red-500/50 animate-pulse";
+      statusColor = "bg-[#3b1111] text-[#f87171] border-[#6b1e1e]";
     } else if (structuralMetrics.safetyFactor < 1.0) {
       statusText = "STRUCTURE OVERLOADED";
-      statusColor = "bg-amber-500/20 text-amber-400 border-amber-500/50";
+      statusColor = "bg-[#332211] text-[#fbbf24] border-[#5c3e17]";
     } else {
       statusText = "STRUCTURALLY SOUND";
-      statusColor = "bg-emerald-500/20 text-emerald-400 border-emerald-500/50";
+      statusColor = "bg-[#132c1f] text-[#4ade80] border-[#1f5135]";
     }
   }
 
@@ -291,7 +291,7 @@ export default function UIOverlay({
       return;
     }
 
-    let objContent = "# VoxelForge 3D Structural Export\n";
+    let objContent = "# VoxelForge 3D Export\n";
     let mtllibName = "voxel_structure.mtl";
     objContent += `mtllib ${mtllibName}\n\n`;
 
@@ -424,35 +424,35 @@ export default function UIOverlay({
 
   return (
     <>
-      <div className={`absolute top-0 left-0 h-full w-96 z-20 pointer-events-auto flex flex-col bg-[#0d1422] border-r border-[#1e2a40] text-slate-100 shadow-2xl transition-transform duration-300 ease-in-out font-sans ${
+      <div className={`absolute top-0 left-0 h-full w-96 z-20 pointer-events-auto flex flex-col bg-[#121316] border-r border-[#2a2d34] text-slate-300 shadow-2xl transition-transform duration-300 ease-in-out font-sans ${
         isCollapsed ? "-translate-x-full" : "translate-x-0"
       }`}>
         {/* Platform Header */}
-        <div className="p-4 border-b border-[#1e2a40] flex items-center justify-between">
+        <div className="p-4 border-b border-[#2a2d34] flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+            <h1 className="text-base font-semibold tracking-wide text-slate-100">
               Spatial Console
             </h1>
-            <p className="text-xs text-slate-400 uppercase tracking-widest font-medium">
-              3D Structural Suite
+            <p className="text-[10px] text-slate-500 uppercase tracking-wider font-medium mt-0.5">
+              3D CAD Engine
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowHelp(true)}
-              className="w-7 h-7 bg-[#111927] hover:bg-[#131f30] border border-[#1e2a40] text-[#60a5fa] hover:text-white rounded-lg flex items-center justify-center text-xs font-black transition-all cursor-pointer"
-              title="Help / Quick Controls"
+              className="w-6 h-6 bg-[#1a1c20] hover:bg-[#22252a] border border-[#2a2d34] text-slate-400 hover:text-white rounded flex items-center justify-center text-xs font-semibold transition-all cursor-pointer"
+              title="Controls Guide"
             >
               ?
             </button>
-            <div className={`px-2 py-0.5 text-[10px] font-bold tracking-wider rounded border ${statusColor}`}>
+            <div className={`px-2 py-0.5 text-[9px] font-semibold tracking-wider rounded border ${statusColor}`}>
               {statusText}
             </div>
           </div>
         </div>
 
         {/* Tab Segment Controls */}
-        <div className="p-1 bg-[#080c14] border-b border-[#1e2a40] flex gap-1 text-[10px]">
+        <div className="p-1 bg-[#121316] border-b border-[#2a2d34] flex gap-1 text-[10px]">
           {[
             { id: "construct", label: "Construct" },
             { id: "telemetry", label: "Telemetry" },
@@ -462,10 +462,10 @@ export default function UIOverlay({
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 py-1.5 text-center rounded-lg font-semibold transition-all cursor-pointer ${
+              className={`flex-1 py-1.5 text-center rounded font-medium transition-all cursor-pointer ${
                 activeTab === tab.id
-                  ? "bg-[#111927] text-[#60a5fa] border border-[#1e2a40]"
-                  : "text-[#3d5166] hover:text-[#94a3b8] border border-transparent"
+                  ? "bg-[#1a1c20] text-slate-100 border border-[#2a2d34]"
+                  : "text-slate-500 hover:text-slate-300 border border-transparent"
               }`}
             >
               {tab.label}
@@ -478,49 +478,49 @@ export default function UIOverlay({
           
           {/* HELP OVERLAY POPUP */}
           {showHelp && (
-            <div className="absolute inset-0 bg-[#0d1422]/95 z-50 p-6 flex flex-col justify-between animate-fadeIn">
+            <div className="absolute inset-0 bg-[#121316]/98 z-50 p-5 flex flex-col justify-between animate-fadeIn text-[11px]">
               <div className="space-y-4">
-                <div className="flex items-center justify-between border-b border-[#1e2a40] pb-3">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-[#60a5fa] flex items-center gap-1.5">
-                    🎮 Interactive Controls Guide
+                <div className="flex items-center justify-between border-b border-[#2a2d34] pb-2">
+                  <h3 className="font-semibold uppercase tracking-wider text-slate-300">
+                    Controls Guide
                   </h3>
                   <button
                     type="button"
                     onClick={() => setShowHelp(false)}
-                    className="text-slate-400 hover:text-white text-xs font-bold"
+                    className="text-slate-500 hover:text-slate-300 font-bold"
                   >
                     ✕ Close
                   </button>
                 </div>
                 
-                <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
-                  <div className="p-3 bg-[#080c14] border border-[#1e2a40] rounded-xl">
-                    <span className="font-bold text-[#94a3b8] block mb-1">🖱️ Mouse Controls:</span>
-                    <div className="space-y-1">
-                      <div>• <strong className="text-white">Left Click Ground</strong>: Place selected block at ground level</div>
-                      <div>• <strong className="text-white">Left Click Block Face</strong>: Snap a new block adjacent to that face</div>
-                      <div>• <strong className="text-white">Right Click Block</strong>: Delete block from scene</div>
-                      <div>• <strong className="text-white">Right Click & Drag</strong>: Rotate camera orbit</div>
+                <div className="space-y-3 text-slate-400 leading-relaxed">
+                  <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
+                    <span className="font-semibold text-slate-200 block mb-1">Mouse Controls:</span>
+                    <div className="space-y-1 font-mono text-[10px]">
+                      <div>Left Click Ground: Place block</div>
+                      <div>Left Click Face: Snap adjacent</div>
+                      <div>Right Click: Delete block</div>
+                      <div>Right Click + Drag: Orbit view</div>
                     </div>
                   </div>
 
-                  <div className="p-3 bg-[#080c14] border border-[#1e2a40] rounded-xl">
-                    <span className="font-bold text-[#94a3b8] block mb-1">⌨️ Keyboard Shortcuts:</span>
-                    <div className="space-y-1">
-                      <div>• <strong className="text-white">R Key</strong>: Cycle block placement rotation by 90°</div>
-                      <div>• <strong className="text-white">Ctrl + Z</strong>: Undo last action (draft or confirm)</div>
-                      <div>• <strong className="text-white">Esc Key</strong>: Cancel active line / beam drawing</div>
+                  <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
+                    <span className="font-semibold text-slate-200 block mb-1">Keyboard Shortcuts:</span>
+                    <div className="space-y-1 font-mono text-[10px]">
+                      <div>R Key: Cycle rotation 90°</div>
+                      <div>Ctrl + Z: Undo action</div>
+                      <div>Esc: Cancel drawing</div>
                     </div>
                   </div>
 
-                  <div className="p-3 bg-[#080c14] border border-[#1e2a40] rounded-xl">
-                    <span className="font-bold text-[#94a3b8] block mb-1">🖐️ Gesture Commands (when active):</span>
-                    <div className="space-y-1">
-                      <div>• <strong className="text-white">Point finger</strong>: Move block cursor</div>
-                      <div>• <strong className="text-white">Pinch fingers</strong>: Place block</div>
-                      <div>• <strong className="text-white">Make Fist</strong>: Delete block</div>
-                      <div>• <strong className="text-white">Open Palm</strong>: Confirm drafts</div>
-                      <div>• <strong className="text-white">V-Sign (peace)</strong>: Orbit camera</div>
+                  <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
+                    <span className="font-semibold text-slate-200 block mb-1">Gesture Commands:</span>
+                    <div className="space-y-1 font-mono text-[10px]">
+                      <div>Point finger: Move cursor</div>
+                      <div>Pinch fingers: Place block</div>
+                      <div>Make Fist: Delete block</div>
+                      <div>Open Palm: Confirm drafts</div>
+                      <div>V-Sign: Orbit camera</div>
                     </div>
                   </div>
                 </div>
@@ -528,24 +528,24 @@ export default function UIOverlay({
 
               <button
                 onClick={() => setShowHelp(false)}
-                className="w-full py-2.5 bg-[#1a3a5c] hover:bg-[#1e4570] border border-[#3b82f6] text-[#60a5fa] font-bold rounded-xl text-xs transition-all active:scale-98"
+                className="w-full py-2 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] text-[#38bdf8] font-bold rounded transition-all cursor-pointer animate-none"
               >
-                Acknowledge & Start Building
+                Close Guide
               </button>
             </div>
           )}
 
           {/* Collapse warning */}
           {collapseState.warningActive && (
-            <div className="p-4 bg-red-950/60 border border-red-500/50 rounded-xl space-y-2 text-slate-100 animate-pulse">
+            <div className="p-4 bg-red-950/60 border border-red-500/50 rounded space-y-2 text-slate-100 animate-pulse">
               <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest flex items-center">
-                ⚠️ Collapse Alert
+                Collapse Alert
               </h3>
               <p className="text-xs text-red-200">
                 {collapseState.unstableIds.length} unstable voxel(s) will fall in{" "}
                 <span className="font-bold text-red-400 text-sm">{collapseState.countdown}s</span>
               </p>
-              <div className="w-full bg-red-900/40 rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-red-900/40 rounded h-1.5 overflow-hidden">
                 <div
                   className="bg-red-500 h-full transition-all duration-1000"
                   style={{ width: `${(collapseState.countdown / 3) * 100}%` }}
@@ -553,7 +553,7 @@ export default function UIOverlay({
               </div>
               <button
                 onClick={() => dispatch({ type: "CANCEL_COLLAPSE" })}
-                className="w-full mt-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-all shadow-md"
+                className="w-full mt-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold transition-all shadow-md"
               >
                 Cancel Structural Collapse
               </button>
@@ -568,10 +568,10 @@ export default function UIOverlay({
               <div className="space-y-3">
                 <div 
                   onClick={() => setMaterialsExpanded(!materialsExpanded)} 
-                  className="flex items-center justify-between p-2.5 bg-[#111927] hover:bg-[#131f30] border border-[#1e2a40] rounded-lg cursor-pointer transition-all select-none"
+                  className="flex items-center justify-between py-1 px-1 cursor-pointer select-none text-[10px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-200 transition-colors"
                 >
-                  <span className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wider">🎨 Textures & Colors</span>
-                  <span className="text-xs text-slate-400">{materialsExpanded ? "▲" : "▼"}</span>
+                  <span>Materials & Colors</span>
+                  <span className="text-[8px]">{materialsExpanded ? "▼" : "▶"}</span>
                 </div>
 
                 {materialsExpanded && (
@@ -581,37 +581,37 @@ export default function UIOverlay({
                         <button
                           key={key}
                           onClick={() => dispatch({ type: "SET_MATERIAL", payload: material })}
-                          className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between h-24 relative overflow-hidden cursor-pointer ${
+                          className={`p-2.5 rounded border text-left transition-all flex flex-col justify-between h-20 relative overflow-hidden cursor-pointer ${
                             currentMaterial.name === material.name
-                              ? "border-[#3b82f6] bg-[#0f1d30] ring-1 ring-[#3b82f6]/40"
-                              : "border-[#1e2a40] bg-[#111927] hover:bg-[#131f30]"
+                              ? "border-[#38bdf8] bg-[#1a1c20]"
+                              : "border-[#2a2d34] bg-[#1a1c20]/60 hover:bg-[#1a1c20] hover:border-slate-600"
                           }`}
                         >
-                          <div className="w-1 h-full rounded-r-sm absolute top-0 left-0" style={{ backgroundColor: material.color }} />
-                          <span className="font-semibold text-xs ml-1">{material.name}</span>
-                          <span className="text-[10px] text-slate-400 font-mono ml-1">{formatCost(material.costPerCube)} / block</span>
+                          <div className="w-1.5 h-1.5 rounded-full absolute top-2.5 right-2.5" style={{ backgroundColor: material.color }} />
+                          <span className="font-semibold text-[11px] text-slate-200">{material.name}</span>
+                          <span className="text-[9px] text-slate-500 font-mono">{formatCost(material.costPerCube)}</span>
                         </button>
                       ))}
 
                       {/* Custom Material Color Selection */}
                       <button
                         onClick={() => setShowColorPalette(!showColorPalette)}
-                        className={`p-3 rounded-xl border text-left transition-all flex flex-col justify-between h-24 col-span-2 relative overflow-hidden cursor-pointer ${
+                        className={`p-2.5 rounded border text-left transition-all flex flex-col justify-between h-20 col-span-2 relative overflow-hidden cursor-pointer ${
                           currentMaterial.name === "Custom"
-                            ? "border-purple-500 bg-purple-950/20 ring-1 ring-purple-500/30"
-                            : "border-[#1e2a40] bg-[#111927] hover:bg-[#131f30]"
+                            ? "border-[#38bdf8] bg-[#1a1c20]"
+                            : "border-[#2a2d34] bg-[#1a1c20]/60 hover:bg-[#1a1c20] hover:border-slate-600"
                         }`}
                       >
-                        <div className="w-1 h-full rounded-r-sm absolute top-0 left-0" style={{ backgroundColor: currentMaterial.name === "Custom" ? currentMaterial.color : "#a855f7" }} />
-                        <span className="font-semibold text-xs ml-1">Custom Color Voxel</span>
-                        <span className="text-[10px] text-slate-400 ml-1">Configure structural properties with custom hues</span>
+                        <div className="w-1.5 h-1.5 rounded-full absolute top-2.5 right-2.5" style={{ backgroundColor: currentMaterial.name === "Custom" ? currentMaterial.color : "#a855f7" }} />
+                        <span className="font-semibold text-[11px] text-slate-200">Custom Color Voxel</span>
+                        <span className="text-[9px] text-slate-500">Configure structural properties with custom hues</span>
                       </button>
                     </div>
 
                     {/* Custom Color Selector Modal */}
                     {showColorPalette && (
-                      <div className="p-3 bg-[#111927] border border-[#1e2a40] rounded-xl animate-fadeIn space-y-2">
-                        <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider">Select Hex Color</span>
+                      <div className="p-2.5 bg-[#1a1c20] border border-[#2a2d34] rounded space-y-2">
+                        <span className="text-[9px] uppercase font-semibold text-slate-400 tracking-wider">Select Hex Color</span>
                         <div className="grid grid-cols-7 gap-1">
                           {COLOR_PALETTE.map((color) => (
                             <button
@@ -620,8 +620,8 @@ export default function UIOverlay({
                                 dispatch({ type: "SET_MATERIAL", payload: createCustomMaterial(color) });
                                 setShowColorPalette(false);
                               }}
-                              className={`w-9 h-9 rounded-lg border-2 transition-all hover:scale-110 cursor-pointer ${
-                                currentMaterial.color === color ? "border-white scale-105" : "border-[#1e2a40]"
+                              className={`w-8 h-8 rounded border transition-all hover:scale-105 cursor-pointer ${
+                                currentMaterial.color === color ? "border-slate-100 scale-102" : "border-[#2a2d34]"
                               }`}
                               style={{ backgroundColor: color }}
                             />
@@ -631,12 +631,12 @@ export default function UIOverlay({
                     )}
 
                     {/* Material Specifications */}
-                    <div className="p-4 bg-[#111927] border border-[#1e2a40] rounded-xl space-y-2 text-xs">
-                      <h4 className="font-bold text-slate-300"> Block Specifications ({currentMaterial.name})</h4>
-                      <div className="grid grid-cols-2 gap-y-2 pt-1 border-t border-[#1e2a40]/40">
-                        <span className="text-slate-400">Density:</span>
+                    <div className="p-4 bg-[#1a1c20] border border-[#2a2d34] rounded space-y-2 text-xs">
+                      <h4 className="font-semibold text-slate-300"> Block Specifications ({currentMaterial.name})</h4>
+                      <div className="grid grid-cols-2 gap-y-2 pt-1 border-t border-[#2a2d34]/40">
+                        <span className="text-slate-500">Density:</span>
                         <span className="font-mono font-semibold text-right">{currentMaterial.density.toLocaleString()} kg/m³</span>
-                        <span className="text-slate-400">Base Cost:</span>
+                        <span className="text-slate-500">Base Cost:</span>
                         <span className="font-mono font-semibold text-right text-blue-400">{formatCost(currentMaterial.costPerCube)}</span>
                       </div>
                     </div>
@@ -648,19 +648,19 @@ export default function UIOverlay({
               <div className="space-y-3">
                 <div 
                   onClick={() => setShapesExpanded(!shapesExpanded)} 
-                  className="flex items-center justify-between p-2.5 bg-[#111927] hover:bg-[#131f30] border border-[#1e2a40] rounded-lg cursor-pointer transition-all select-none"
+                  className="flex items-center justify-between py-1 px-1 cursor-pointer select-none text-[10px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-200 transition-colors"
                 >
-                  <span className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wider">📐 Architectural Geometries</span>
-                  <span className="text-xs text-slate-400">{shapesExpanded ? "▲" : "▼"}</span>
+                  <span>Architectural Geometries</span>
+                  <span className="text-[8px]">{shapesExpanded ? "▼" : "▶"}</span>
                 </div>
 
                 {shapesExpanded && (
                   <div className="space-y-4 pl-1 animate-fadeIn">
                     {/* Active Rotation Indicator */}
-                    <div className="p-3 bg-blue-950/20 border border-blue-500/20 rounded-xl flex items-center justify-between">
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider">Object Rotation</span>
-                        <p className="text-xs font-semibold text-blue-400">
+                    <div className="p-2.5 bg-[#1a1c20] border border-[#2a2d34] rounded flex items-center justify-between text-[10px]">
+                      <div>
+                        <span className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider">Object Rotation</span>
+                        <p className="font-medium text-slate-300 mt-0.5">
                           {state.rotationY === 0 ? "Facing North (0°)" :
                            state.rotationY === 1 ? "Facing East (90°)" :
                            state.rotationY === 2 ? "Facing South (180°)" : "Facing West (270°)"}
@@ -669,20 +669,20 @@ export default function UIOverlay({
                       <button
                         type="button"
                         onClick={() => dispatch({ type: "ROTATE_Y" })}
-                        className="py-1 px-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold cursor-pointer transition-all active:scale-95"
+                        className="py-1 px-2.5 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] text-[#38bdf8] rounded font-medium cursor-pointer transition-all"
                       >
-                        🔄 Rotate Y (R)
+                        Rotate (R)
                       </button>
                     </div>
 
                     {/* Category Filter Segments */}
-                    <div className="grid grid-cols-5 gap-1 bg-[#080c14] p-1 rounded-xl border border-[#1e2a40]">
+                    <div className="grid grid-cols-5 gap-1 bg-[#121316] p-0.5 rounded border border-[#2a2d34]">
                       {[
-                        { id: "shapes", label: "Shapes", emoji: "📐" },
-                        { id: "openings", label: "Openings", emoji: "🚪" },
-                        { id: "furniture", label: "Decor", emoji: "🛋️" },
-                        { id: "landscaping", label: "Garden", emoji: "🌱" },
-                        { id: "utilities", label: "Utility", emoji: "💡" },
+                        { id: "shapes", label: "Shapes" },
+                        { id: "openings", label: "Openings" },
+                        { id: "furniture", label: "Decor" },
+                        { id: "landscaping", label: "Garden" },
+                        { id: "utilities", label: "Utility" },
                       ].map((cat) => {
                         const isActive = activeCategory === cat.id;
                         return (
@@ -690,16 +690,13 @@ export default function UIOverlay({
                             key={cat.id}
                             type="button"
                             onClick={() => setActiveCategory(cat.id)}
-                            className={`py-1.5 px-0.5 rounded-lg flex flex-col items-center justify-center gap-0.5 transition-all cursor-pointer ${
+                            className={`py-1 rounded text-[9px] font-medium transition-all cursor-pointer ${
                               isActive
-                                ? "bg-[#111927] border border-[#3b82f6] text-[#60a5fa] font-extrabold"
-                                : "border border-transparent text-[#3d5166] hover:text-[#94a3b8] hover:bg-[#111927]/30"
+                                ? "bg-[#1a1c20] text-[#38bdf8] font-semibold border border-[#2a2d34]"
+                                : "text-slate-500 hover:text-slate-300 border border-transparent"
                             }`}
                           >
-                            <span className="text-base">{cat.emoji}</span>
-                            <span className="text-[8px] uppercase tracking-wider font-bold truncate w-full text-center">
-                              {cat.label}
-                            </span>
+                            {cat.label}
                           </button>
                         );
                       })}
@@ -711,7 +708,7 @@ export default function UIOverlay({
                       if (!selectedCat) return null;
                       return (
                         <div className="space-y-1.5">
-                          <h4 className="text-[9px] uppercase font-black text-slate-500 tracking-wider border-b border-slate-900/60 pb-1">
+                          <h4 className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider border-b border-[#2a2d34] pb-1">
                             {selectedCat.name}
                           </h4>
                           <div className="grid grid-cols-2 gap-1.5">
@@ -722,16 +719,16 @@ export default function UIOverlay({
                                   key={item.id}
                                   type="button"
                                   onClick={() => dispatch({ type: "SET_SHAPE", payload: item.id })}
-                                  className={`p-2 rounded-lg border text-left transition-all flex items-center gap-2 cursor-pointer ${
+                                  className={`p-2 rounded border text-left transition-all flex items-center gap-2 cursor-pointer ${
                                     isSelected
-                                      ? "border-[#3b82f6] bg-[#0f1d30] ring-1 ring-blue-500/30"
-                                      : "border-[#1e2a40] bg-[#111927] hover:bg-[#131f30]"
+                                      ? "border-[#38bdf8] bg-[#1a1c20]"
+                                      : "border-[#2a2d34] bg-[#1a1c20]/60 hover:bg-[#1a1c20] hover:border-slate-600"
                                   }`}
                                 >
-                                  <div className="w-7 h-7 flex items-center justify-center bg-[#1a2540] rounded-md text-sm flex-shrink-0">
-                                    <span className="text-sm">{item.emoji}</span>
+                                  <div className="w-6 h-6 flex items-center justify-center bg-[#121316] border border-[#2a2d34] rounded text-xs flex-shrink-0">
+                                    {item.emoji}
                                   </div>
-                                  <span className="font-bold text-[10px] text-slate-300 truncate">{item.name}</span>
+                                  <span className="font-semibold text-[10px] text-slate-300 truncate">{item.name}</span>
                                 </button>
                               );
                             })}
@@ -752,90 +749,86 @@ export default function UIOverlay({
               
               {/* Voxel Counts */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-[#111927] border border-[#1e2a40] rounded-xl">
-                  <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider">Draft Voxels</span>
-                  <p className="text-lg font-bold text-blue-400 font-mono mt-0.5">{draftCount}</p>
+                <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
+                  <span className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider">Draft Voxels</span>
+                  <p className="text-lg font-semibold text-slate-200 font-mono mt-0.5">{draftCount}</p>
                 </div>
-                <div className="p-3 bg-[#111927] border border-[#1e2a40] rounded-xl">
-                  <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider">Confirmed</span>
-                  <p className="text-lg font-bold text-indigo-400 font-mono mt-0.5">{confirmedCount}</p>
+                <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
+                  <span className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider">Confirmed</span>
+                  <p className="text-lg font-semibold text-slate-200 font-mono mt-0.5">{confirmedCount}</p>
                 </div>
               </div>
 
               {/* Tool Mode Selection */}
-              <div className="p-3 bg-[#111927] border border-[#1e2a40] rounded-xl space-y-2">
-                <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider block">Placement Mode</span>
+              <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded space-y-2">
+                <span className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider block">Placement Mode</span>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     onClick={() => dispatch({ type: "SET_TOOL_MODE", payload: { toolMode: "single" } })}
-                    className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                    className={`py-1.5 px-2 text-xs font-semibold rounded border transition-all cursor-pointer ${
                       (viewSettings?.toolMode || "single") === "single"
-                        ? "bg-[#1a2d4a] text-[#60a5fa] border-[#3b82f6]"
-                        : "bg-[#080c14] text-[#3d5166] border-[#1e2a40] hover:text-[#94a3b8]"
+                        ? "bg-[#121316] text-[#38bdf8] border-[#38bdf8]"
+                        : "bg-[#1a1c20] text-slate-500 border-[#2a2d34] hover:text-slate-300"
                     }`}
                   >
-                    🧱 Single Voxel
+                    Single Voxel
                   </button>
                   <button
                     onClick={() => dispatch({ type: "SET_TOOL_MODE", payload: { toolMode: "line" } })}
-                    className={`py-2 px-3 text-xs font-bold rounded-lg border transition-all cursor-pointer ${
+                    className={`py-1.5 px-2 text-xs font-semibold rounded border transition-all cursor-pointer ${
                       viewSettings?.toolMode === "line"
-                        ? "bg-[#1a2d4a] text-[#60a5fa] border-[#3b82f6]"
-                        : "bg-[#080c14] text-[#3d5166] border-[#1e2a40] hover:text-[#94a3b8]"
+                        ? "bg-[#121316] text-[#38bdf8] border-[#38bdf8]"
+                        : "bg-[#1a1c20] text-slate-500 border-[#2a2d34] hover:text-slate-300"
                     }`}
                   >
-                    📏 Line / Beam
+                    Line / Beam
                   </button>
                 </div>
                 {viewSettings?.toolMode === "line" && (
-                  <p className="text-[10px] text-slate-400 italic">
-                    * Click start position &rarr; hover to preview beam along axis &rarr; click again to place. Esc to cancel.
+                  <p className="text-[9px] text-slate-500 italic">
+                    * Click start pos, hover to preview line, click to place. Esc to cancel.
                   </p>
                 )}
               </div>
 
               {/* Engineering Telemetry Metrics */}
-              <div className="space-y-3 p-4 bg-[#111927] border border-[#1e2a40] rounded-xl">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-[#94a3b8]">Engineering Telemetry</h3>
+              <div className="space-y-2.5 p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
+                <h3 className="text-[9px] uppercase font-semibold tracking-wider text-slate-400">Engineering Telemetry</h3>
                 
                 {/* Safety Factor */}
-                <div className="flex justify-between items-center py-1 border-b border-[#1a2540]">
-                  <span className="text-xs text-slate-400 flex items-center">
-                    🛡️ Safety Factor
-                  </span>
-                  <span className={`text-xs font-bold font-mono ${
-                    structuralMetrics.safetyFactor === Infinity ? "text-slate-400" :
+                <div className="flex justify-between items-center py-1.5 border-b border-[#2a2d34]">
+                  <span className="text-xs text-slate-500">Safety Factor</span>
+                  <span className={`text-xs font-semibold font-mono ${
+                    structuralMetrics.safetyFactor === Infinity ? "text-slate-500" :
                     structuralMetrics.safetyFactor >= 1.5 ? "text-emerald-400" :
-                    structuralMetrics.safetyFactor >= 1.0 ? "text-amber-400" : "text-red-400 font-black animate-pulse"
+                    structuralMetrics.safetyFactor >= 1.0 ? "text-amber-400" : "text-red-400 font-bold"
                   }`}>
-                    {structuralMetrics.safetyFactor === Infinity ? "∞ (No stress)" :
-                     `${structuralMetrics.safetyFactor.toFixed(2)}x ${structuralMetrics.safetyFactor < 1.0 ? "⚠️" : "✓"}`}
+                    {structuralMetrics.safetyFactor === Infinity ? "No stress" :
+                     `${structuralMetrics.safetyFactor.toFixed(2)}x`}
                   </span>
                 </div>
 
                 {/* Total Mass */}
-                <div className="flex justify-between items-center py-1 border-b border-[#1a2540]">
-                  <span className="text-xs text-slate-400 flex items-center">
-                    ⚖️ Total Weight
-                  </span>
-                  <span className="text-xs font-bold text-slate-200 font-mono">
+                <div className="flex justify-between items-center py-1.5 border-b border-[#2a2d34]">
+                  <span className="text-xs text-slate-500">Total Weight</span>
+                  <span className="text-xs font-semibold text-slate-300 font-mono">
                     {formatMass(structuralMetrics.totalMass)}
                   </span>
                 </div>
 
                 {/* Budget Limit Meter */}
-                <div className="space-y-1 py-1 border-b border-[#1a2540]">
+                <div className="space-y-1.5 py-1.5 border-b border-[#2a2d34]">
                   <div className="flex justify-between items-center">
-                    <span className="text-xs text-slate-400">💵 Voxel Cost</span>
-                    <span className="text-xs font-bold text-slate-200 font-mono">
+                    <span className="text-xs text-slate-500">Voxel Cost</span>
+                    <span className="text-xs font-semibold text-slate-300 font-mono">
                       {formatCost(structuralMetrics.totalCost)} / $10k
                     </span>
                   </div>
-                  <div className="w-full bg-slate-950 rounded-full h-1">
+                  <div className="w-full bg-[#121316] rounded-full h-1">
                     <div
                       className={`h-full rounded-full transition-all duration-300 ${
                         structuralMetrics.totalCost > 10000 ? "bg-red-500" :
-                        structuralMetrics.totalCost > 7500 ? "bg-amber-500" : "bg-blue-500"
+                        structuralMetrics.totalCost > 7500 ? "bg-amber-500" : "bg-[#38bdf8]"
                       }`}
                       style={{ width: `${Math.min(100, (structuralMetrics.totalCost / 10000) * 100)}%` }}
                     />
@@ -843,17 +836,17 @@ export default function UIOverlay({
                 </div>
 
                 {/* Height */}
-                <div className="flex justify-between items-center py-1 border-b border-[#1a2540]">
-                  <span className="text-xs text-slate-400">📏 Max Height</span>
-                  <span className="text-xs font-bold text-slate-200 font-mono">
+                <div className="flex justify-between items-center py-1.5 border-b border-[#2a2d34]">
+                  <span className="text-xs text-slate-500">Max Height</span>
+                  <span className="text-xs font-semibold text-slate-300 font-mono">
                     {structuralMetrics.maxHeight.toFixed(1)} m ({Math.max(0, Math.ceil(structuralMetrics.maxHeight - 0.5))} blocks)
                   </span>
                 </div>
 
                 {/* Center of Mass */}
                 <div className="flex justify-between items-center py-1">
-                  <span className="text-xs text-slate-400">🎯 Center of Mass</span>
-                  <span className="text-xs font-bold text-slate-300 font-mono">
+                  <span className="text-xs text-slate-500">Center of Mass</span>
+                  <span className="text-xs font-semibold text-slate-300 font-mono">
                     {confirmedCount > 0
                       ? `(${structuralMetrics.centerOfMass.x.toFixed(1)}, ${structuralMetrics.centerOfMass.y.toFixed(1)}, ${structuralMetrics.centerOfMass.z.toFixed(1)})`
                       : "None"}
@@ -872,29 +865,29 @@ export default function UIOverlay({
               <div className="space-y-3">
                 <div 
                   onClick={() => setTemplatesExpanded(!templatesExpanded)} 
-                  className="flex items-center justify-between p-2.5 bg-[#111927] hover:bg-[#131f30] border border-[#1e2a40] rounded-lg cursor-pointer transition-all select-none"
+                  className="flex items-center justify-between py-1 px-1 cursor-pointer select-none text-[10px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-200 transition-colors"
                 >
-                  <span className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wider">📂 Pre-built Blueprints</span>
-                  <span className="text-xs text-slate-400">{templatesExpanded ? "▲" : "▼"}</span>
+                  <span>Pre-built Blueprints</span>
+                  <span className="text-[8px]">{templatesExpanded ? "▼" : "▶"}</span>
                 </div>
 
                 {templatesExpanded && (
                   <div className="space-y-2 pl-1 animate-fadeIn">
-                    <p className="text-[11px] text-[#3d5166] leading-normal mb-2">
-                      Load these template structures directly into the viewport to test.
+                    <p className="text-[11px] text-slate-500 leading-normal mb-2">
+                      Load template structures directly into the viewport.
                     </p>
                     {Object.entries(TEMPLATES).map(([key, template]) => (
                       <div
                         key={key}
-                        className="p-3 bg-[#111927] hover:bg-[#131f30] border border-[#1e2a40] rounded-xl flex flex-col justify-between gap-2 transition-all"
+                        className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded flex flex-col justify-between gap-2 transition-all hover:border-slate-500"
                       >
                         <div>
-                          <h4 className="font-bold text-xs text-slate-200">{template.name}</h4>
-                          <p className="text-[10px] text-slate-400 mt-1 leading-relaxed">{template.description}</p>
+                          <h4 className="font-semibold text-[11px] text-slate-200">{template.name}</h4>
+                          <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{template.description}</p>
                         </div>
                         <button
                           onClick={() => dispatch({ type: "LOAD_TEMPLATE", payload: { cubes: template.cubes } })}
-                          className="self-end px-3 py-1 bg-[#1a2d4a] hover:bg-blue-600 hover:text-white border border-blue-500/30 text-[#60a5fa] rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                          className="self-end px-2.5 py-1 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] text-[#38bdf8] rounded text-[10px] font-semibold transition-all cursor-pointer"
                         >
                           Load Model
                         </button>
@@ -908,10 +901,10 @@ export default function UIOverlay({
               <div className="space-y-3">
                 <div 
                   onClick={() => setSavedDesignsExpanded(!savedDesignsExpanded)} 
-                  className="flex items-center justify-between p-2.5 bg-[#111927] hover:bg-[#131f30] border border-[#1e2a40] rounded-lg cursor-pointer transition-all select-none"
+                  className="flex items-center justify-between py-1 px-1 cursor-pointer select-none text-[10px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-200 transition-colors"
                 >
-                  <span className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wider">📁 Cloud & Local Designs</span>
-                  <span className="text-xs text-slate-400">{savedDesignsExpanded ? "▲" : "▼"}</span>
+                  <span>Cloud & Local Designs</span>
+                  <span className="text-[8px]">{savedDesignsExpanded ? "▼" : "▶"}</span>
                 </div>
 
                 {savedDesignsExpanded && (
@@ -919,8 +912,8 @@ export default function UIOverlay({
                     {/* Save Current Design Section */}
                     {state.user ? (
                       confirmedCount > 0 ? (
-                        <form onSubmit={handleSave} className="space-y-2 p-3 bg-[#080c14] border border-[#1e2a40] rounded-xl">
-                          <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider">Save Current Design</span>
+                        <form onSubmit={handleSave} className="space-y-2 p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
+                          <span className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider">Save Current Design</span>
                           <div className="flex gap-2">
                             <input
                               type="text"
@@ -929,24 +922,24 @@ export default function UIOverlay({
                               placeholder="e.g. My suspension bridge"
                               required
                               maxLength={40}
-                              className="flex-1 px-3 py-1.5 bg-[#080c14] border border-[#1e2a40] rounded-lg text-xs text-[#cbd5e1] focus:outline-none focus:border-[#3b82f6]"
+                              className="flex-1 px-3 py-1.5 bg-[#121316] border border-[#2a2d34] rounded text-xs text-[#cbd5e1] focus:outline-none focus:border-[#38bdf8]"
                             />
                             <button
                               type="submit"
                               disabled={isSaving}
-                              className="px-4 bg-[#1a3a5c] hover:bg-[#1e4570] disabled:bg-[#080c14] text-[#60a5fa] disabled:text-[#3d5166] text-xs font-bold rounded-lg transition-all cursor-pointer flex items-center justify-center gap-1 active:scale-95"
+                              className="px-4 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] disabled:bg-[#1a1c20] text-[#38bdf8] disabled:text-slate-600 text-xs font-semibold rounded transition-all cursor-pointer flex items-center justify-center gap-1"
                             >
-                              {isSaving ? "..." : "💾 Save"}
+                              {isSaving ? "..." : "Save"}
                             </button>
                           </div>
                         </form>
                       ) : (
-                        <div className="p-3 bg-[#080c14] border border-[#1e2a40] rounded-lg text-[10px] text-[#3d5166] text-center">
+                        <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded text-[10px] text-slate-500 text-center">
                           * Place and confirm blocks to enable saving!
                         </div>
                       )
                     ) : (
-                      <div className="p-3 bg-[#080c14] border border-[#1e2a40] rounded-lg text-[10px] text-[#3d5166] text-center">
+                      <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded text-[10px] text-slate-500 text-center">
                         * Please log in under the Account tab to save designs!
                       </div>
                     )}
@@ -957,7 +950,7 @@ export default function UIOverlay({
                         {isLoadingList ? (
                           <p className="text-xs text-[#3d5166] text-center py-5">Loading project database...</p>
                         ) : savedDesigns.length === 0 ? (
-                          <p className="text-xs text-[#3d5166] text-center py-5 italic bg-[#080c14] border border-[#1e2a40] rounded-xl">
+                          <p className="text-xs text-[#3d5166] text-center py-5 italic bg-[#121316] border border-[#2a2d34] rounded">
                             No designs saved in this account yet.
                           </p>
                         ) : (
@@ -966,10 +959,10 @@ export default function UIOverlay({
                               <div
                                 key={design.id}
                                 onClick={() => handleLoadDesign(design)}
-                                className="p-3 bg-[#111927] hover:bg-[#131f30] border border-[#1e2a40] hover:border-[#3b82f6]/50 rounded-xl flex items-center justify-between gap-3 cursor-pointer transition-all active:scale-99"
+                                className="p-3 bg-[#1a1c20] border border-[#2a2d34] hover:border-[#38bdf8]/50 rounded flex items-center justify-between gap-3 cursor-pointer transition-all"
                               >
                                 <div className="flex-1 min-w-0">
-                                  <h4 className="font-bold text-xs text-slate-200 truncate">{design.name}</h4>
+                                  <h4 className="font-semibold text-xs text-slate-200 truncate">{design.name}</h4>
                                   <span className="text-[9px] text-slate-500 font-mono">
                                     {new Date(design.createdAt).toLocaleDateString()} • {design.cubes.length} blocks
                                   </span>
@@ -982,16 +975,16 @@ export default function UIOverlay({
                                       setShareUrl(url);
                                     }}
                                     title="Generate Shareable Link"
-                                    className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-blue-400 transition-all"
+                                    className="p-1 hover:bg-[#121316] border border-[#2a2d34] rounded text-slate-400 hover:text-[#38bdf8] transition-all text-xs"
                                   >
-                                    🔗
+                                    Share
                                   </button>
                                   <button
                                     onClick={(e) => handleDeleteDesign(design.id, e)}
                                     title="Delete Project"
-                                    className="p-1.5 hover:bg-slate-800 rounded text-slate-400 hover:text-red-400 transition-all"
+                                    className="p-1 hover:bg-[#121316] border border-[#2a2d34] rounded text-slate-400 hover:text-red-400 transition-all text-xs"
                                   >
-                                    🗑️
+                                    Delete
                                   </button>
                                 </div>
                               </div>
@@ -1003,31 +996,31 @@ export default function UIOverlay({
 
                     {/* Generated Share Link Box */}
                     {shareUrl && (
-                      <div className="p-3.5 bg-[#111927] border border-[#1e2a40] rounded-xl animate-fadeIn space-y-2 relative">
+                      <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded animate-fadeIn space-y-2 relative">
                         <button
                           type="button"
                           onClick={() => setShareUrl("")}
-                          className="absolute top-3 right-3 text-[#3d5166] hover:text-[#cbd5e1] cursor-pointer text-[10px] font-bold w-4.5 h-4.5 flex items-center justify-center rounded-full hover:bg-[#131f30] transition-all"
+                          className="absolute top-2.5 right-2.5 text-slate-500 hover:text-slate-300 cursor-pointer text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded hover:bg-[#121316] transition-all"
                           title="Close"
                         >
                           ✕
                         </button>
-                        <span className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wider block">🔗 Project Share Link</span>
-                        <p className="text-[10px] text-slate-400 leading-normal">
-                          Anyone with this link can view and test your 3D structure:
+                        <span className="text-[9px] uppercase font-semibold text-slate-400 tracking-wider block">Project Share Link</span>
+                        <p className="text-[10px] text-slate-500 leading-normal">
+                          Anyone with this link can view your 3D structure:
                         </p>
                         <div className="flex gap-1">
                           <input
                             type="text"
                             readOnly
                             value={shareUrl}
-                            className="flex-1 px-2.5 py-1 bg-[#080c14] border border-slate-850 rounded text-[10px] font-mono text-slate-400 focus:outline-none animate-pulse"
+                            className="flex-1 px-2 py-1 bg-[#121316] border border-[#2a2d34] rounded text-[10px] font-mono text-slate-400 focus:outline-none animate-none"
                           />
                           <button
                             onClick={handleCopyShareLink}
-                            className="px-3 bg-[#1a3a5c] hover:bg-[#1e4570] text-[#60a5fa] text-[10px] font-bold rounded transition-all cursor-pointer active:scale-95"
+                            className="px-2.5 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] text-[#38bdf8] text-[10px] font-semibold rounded transition-all cursor-pointer"
                           >
-                            {copiedShareLink ? "Copied!" : "Copy"}
+                            Copy
                           </button>
                         </div>
                       </div>
@@ -1040,10 +1033,10 @@ export default function UIOverlay({
               <div className="space-y-3">
                 <div 
                   onClick={() => setImportExportExpanded(!importExportExpanded)} 
-                  className="flex items-center justify-between p-2.5 bg-[#111927] hover:bg-[#131f30] border border-[#1e2a40] rounded-lg cursor-pointer transition-all select-none"
+                  className="flex items-center justify-between py-1 px-1 cursor-pointer select-none text-[10px] font-semibold text-slate-400 uppercase tracking-wider hover:text-slate-200 transition-colors"
                 >
-                  <span className="text-[10px] uppercase font-bold text-[#94a3b8] tracking-wider">📥 Import & Export Pipelines</span>
-                  <span className="text-xs text-slate-400">{importExportExpanded ? "▲" : "▼"}</span>
+                  <span>Import & Export Pipelines</span>
+                  <span className="text-[8px]">{importExportExpanded ? "▼" : "▶"}</span>
                 </div>
 
                 {importExportExpanded && (
@@ -1051,48 +1044,48 @@ export default function UIOverlay({
                     
                     {/* Model Exporter */}
                     <div className="space-y-2">
-                      <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider block">CAD Mesh Exporter</span>
-                      <p className="text-[10px] text-slate-400 leading-normal">
-                        Download generic Wavefront `.obj` files with materials for Blender or CAD platforms.
+                      <span className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider block">CAD Mesh Exporter</span>
+                      <p className="text-[10px] text-slate-500 leading-normal">
+                        Export scene to generic Wavefront `.obj` file for Blender or CAD.
                       </p>
                       <button
                         onClick={handleExportOBJ}
                         disabled={confirmedCubes.length === 0}
-                        className={`w-full py-2.5 rounded-xl font-bold text-xs tracking-wide transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
+                        className={`w-full py-2 rounded font-semibold text-[11px] tracking-wide transition-all border flex items-center justify-center gap-1.5 cursor-pointer ${
                           confirmedCubes.length === 0
-                            ? "bg-[#111927] text-[#3d5166] border-[#1e2a40] cursor-not-allowed"
-                            : "bg-[#1a2d4a] hover:bg-[#3b82f6] border-[#3b82f6] text-[#60a5fa] hover:text-white"
+                            ? "bg-[#1a1c20] text-slate-600 border-[#2a2d34] cursor-not-allowed"
+                            : "bg-[#121316] hover:bg-[#1a1c20] border-[#2a2d34] text-[#38bdf8] hover:text-white"
                         }`}
                       >
-                        📥 Download wave-front .OBJ Model
+                        Download wavefront .OBJ
                       </button>
                     </div>
 
-                    <div className="border-t border-[#1e2a40] pt-2 space-y-3">
-                      <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider block">JSON Blueprint Tools</span>
+                    <div className="border-t border-[#2a2d34] pt-2 space-y-3">
+                      <span className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider block">JSON Blueprint Tools</span>
                       <button
                         onClick={handleExportJSON}
                         disabled={confirmedCubes.length === 0}
-                        className="w-full py-2 border border-[#1e2a40] bg-[#080c14] hover:bg-[#131f30] text-[#94a3b8] rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1"
+                        className="w-full py-1.5 border border-[#2a2d34] bg-[#121316] hover:bg-[#1a1c20] text-slate-300 rounded text-[11px] font-semibold transition-all cursor-pointer flex items-center justify-center gap-1"
                       >
-                        {copied ? "✓ Copied to Clipboard!" : "📋 Copy Blueprint to Clipboard"}
+                        {copied ? "Copied!" : "Copy Blueprint to Clipboard"}
                       </button>
 
                       <div className="space-y-1.5">
-                        <span className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider block">Paste Voxel JSON</span>
+                        <span className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider block">Paste Voxel JSON</span>
                         <textarea
                           value={jsonInput}
                           onChange={(e) => setJsonInput(e.target.value)}
-                          placeholder='Paste valid block coordinates: [{"x":0,"y":0.5,"z":0,"material":{"name":"Steel"}}]'
-                          className="w-full h-16 p-2 bg-[#080c14] border border-[#1e2a40] rounded-lg text-[10px] font-mono text-[#cbd5e1] focus:outline-none focus:border-[#3b82f6]"
+                          placeholder='[{"x":0,"y":0.5,"z":0,"material":{"name":"Steel"}}]'
+                          className="w-full h-16 p-2 bg-[#121316] border border-[#2a2d34] rounded text-[10px] font-mono text-[#cbd5e1] focus:outline-none focus:border-[#38bdf8]"
                         />
                         {importError && <p className="text-[10px] text-red-400">{importError}</p>}
                         <button
                           onClick={handleImportJSON}
                           disabled={!jsonInput}
-                          className="w-full py-2 bg-[#1a3a5c] hover:bg-[#1e4570] text-[#60a5fa] rounded-lg text-xs font-semibold disabled:bg-[#080c14] disabled:text-[#3d5166] transition-all cursor-pointer"
+                          className="w-full py-2 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] text-[#38bdf8] rounded text-xs font-semibold disabled:bg-[#1a1c20] disabled:text-slate-600 disabled:border-[#2a2d34] transition-all cursor-pointer"
                         >
-                          📥 Import Voxel Blueprint
+                          Import Blueprint
                         </button>
                       </div>
                     </div>
@@ -1109,28 +1102,25 @@ export default function UIOverlay({
             <div className="space-y-4">
               
               {!state.user ? (
-                <div className="p-4 bg-[#111927] border border-[#1e2a40] rounded-xl space-y-3">
+                <div className="p-4 bg-[#1a1c20] border border-[#2a2d34] rounded space-y-3">
                   <div className="text-center pb-1">
-                    <div className="w-10 h-10 bg-slate-850 border border-slate-800 rounded-full flex items-center justify-center mx-auto text-lg mb-1 shadow-inner">
-                      👤
-                    </div>
-                    <h3 className="font-bold text-sm text-slate-200">Cloud Sync Console</h3>
-                    <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
-                      Authenticate to access the spatial blueprints database.
+                    <h3 className="font-semibold text-xs text-slate-200">Cloud Sync</h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-relaxed">
+                      Sync spatial blueprints to cloud storage.
                     </p>
                   </div>
 
                   {/* Tab Switcher */}
-                  <div className="flex border-b border-slate-850/80 text-[11px] mb-3">
+                  <div className="flex border-b border-[#2a2d34] text-[10px] mb-3">
                     <button
                       type="button"
                       onClick={() => {
                         setAuthMode("login");
                         setAuthError("");
                       }}
-                      className={`flex-1 pb-2 text-center font-bold transition-all cursor-pointer ${
+                      className={`flex-1 pb-1.5 text-center font-medium transition-all cursor-pointer ${
                         authMode === "login"
-                          ? "text-blue-400 border-b-2 border-blue-500"
+                          ? "text-[#38bdf8] border-b border-[#38bdf8]"
                           : "text-slate-500 hover:text-slate-300"
                       }`}
                     >
@@ -1142,9 +1132,9 @@ export default function UIOverlay({
                         setAuthMode("register");
                         setAuthError("");
                       }}
-                      className={`flex-1 pb-2 text-center font-bold transition-all cursor-pointer ${
+                      className={`flex-1 pb-1.5 text-center font-medium transition-all cursor-pointer ${
                         authMode === "register"
-                          ? "text-blue-400 border-b-2 border-blue-500"
+                          ? "text-[#38bdf8] border-b border-[#38bdf8]"
                           : "text-slate-500 hover:text-slate-300"
                       }`}
                     >
@@ -1156,32 +1146,32 @@ export default function UIOverlay({
                   <form onSubmit={handleEmailAuthSubmit} className="space-y-2.5">
                     {authMode === "register" && (
                       <div className="space-y-1">
-                        <label className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider block">Username</label>
+                        <label className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider block">Username</label>
                         <input
                           type="text"
                           value={usernameInput}
                           onChange={(e) => setUsernameInput(e.target.value)}
-                          placeholder="e.g. spatial_builder_9"
+                          placeholder="spatial_builder"
                           required
-                          className="w-full px-3 py-1.5 bg-[#080c14] border border-[#1e2a40] rounded-lg text-xs text-[#cbd5e1] focus:outline-none focus:border-[#3b82f6]"
+                          className="w-full px-2.5 py-1.5 bg-[#121316] border border-[#2a2d34] rounded text-xs text-[#cbd5e1] focus:outline-none focus:border-[#38bdf8]"
                         />
                       </div>
                     )}
 
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider block">Email Address</label>
+                      <label className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider block">Email Address</label>
                       <input
                         type="email"
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
-                        placeholder="e.g. name@domain.com"
+                        placeholder="name@domain.com"
                         required
-                        className="w-full px-3 py-1.5 bg-[#080c14] border border-[#1e2a40] rounded-lg text-xs text-[#cbd5e1] focus:outline-none focus:border-[#3b82f6]"
+                        className="w-full px-2.5 py-1.5 bg-[#121316] border border-[#2a2d34] rounded text-xs text-[#cbd5e1] focus:outline-none focus:border-[#38bdf8]"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase font-bold text-[#3d5166] tracking-wider block">Password</label>
+                      <label className="text-[9px] uppercase font-semibold text-slate-500 tracking-wider block">Password</label>
                       <input
                         type="password"
                         value={passwordInput}
@@ -1189,91 +1179,70 @@ export default function UIOverlay({
                         placeholder="••••••••"
                         required
                         minLength={6}
-                        className="w-full px-3 py-1.5 bg-[#080c14] border border-[#1e2a40] rounded-lg text-xs text-[#cbd5e1] focus:outline-none focus:border-[#3b82f6]"
+                        className="w-full px-2.5 py-1.5 bg-[#121316] border border-[#2a2d34] rounded text-xs text-[#cbd5e1] focus:outline-none focus:border-[#38bdf8]"
                       />
                     </div>
 
                     {authError && (
-                      <p className="text-[10px] text-red-400 bg-red-950/20 border border-red-900/30 p-2 rounded-lg leading-relaxed">
-                        ⚠️ {authError}
+                      <p className="text-[10px] text-red-400 bg-red-950/20 border border-red-900/30 p-2 rounded leading-relaxed">
+                        {authError}
                       </p>
                     )}
 
                     <button
                       type="submit"
                       disabled={authLoading}
-                      className="w-full py-2 bg-[#1a3a5c] hover:bg-[#1e4570] disabled:bg-[#080c14] text-[#60a5fa] disabled:text-[#3d5166] rounded-lg text-xs font-bold transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5 active:scale-98"
+                      className="w-full py-2 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] disabled:bg-[#1a1c20] text-[#38bdf8] disabled:text-slate-600 rounded text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                      {authLoading ? (
-                        <span className="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      ) : null}
-                      {authMode === "login" ? "🔑 Log In" : "📝 Create Account"}
+                      {authLoading ? "Authenticating..." : (authMode === "login" ? "Log In" : "Create Account")}
                     </button>
                   </form>
 
                   {/* Divider */}
                   <div className="relative my-3 flex py-1 items-center">
-                    <div className="flex-grow border-t border-[#1e2a40]" />
-                    <span className="flex-shrink mx-2 text-[9px] uppercase font-bold text-[#3d5166] tracking-wider">or</span>
-                    <div className="flex-grow border-t border-[#1e2a40]" />
+                    <div className="flex-grow border-t border-[#2a2d34]" />
+                    <span className="flex-shrink mx-2 text-[9px] uppercase font-semibold text-slate-500 tracking-wider">or</span>
+                    <div className="flex-grow border-t border-[#2a2d34]" />
                   </div>
 
                   {/* Google Sign-in */}
                   <button
                     type="button"
                     onClick={handleLogin}
-                    className="w-full py-2 bg-[#080c14] hover:bg-[#111927] border border-[#1e2a40] hover:border-[#3b82f6] text-[#cbd5e1] rounded-lg text-xs font-semibold transition-all shadow-sm cursor-pointer flex items-center justify-center gap-2 active:scale-98"
+                    className="w-full py-2 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] text-slate-300 rounded text-xs font-semibold transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    <svg className="w-3.5 h-3.5" viewBox="0 0 24 24">
-                      <path
-                        fill="currentColor"
-                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"
-                      />
-                      <path
-                        fill="currentColor"
-                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"
-                      />
-                    </svg>
                     Sign In with Google
                   </button>
 
                   {!firebaseEnabled && (
-                    <p className="text-[9px] text-amber-400/90 text-center italic mt-1.5">
+                    <p className="text-[9px] text-amber-500/90 text-center italic mt-1.5">
                       ℹ️ Running in Local Storage Sandbox mode.
                     </p>
                   )}
                 </div>
               ) : (
-                <div className="p-4 bg-[#111927] border border-[#1e2a40] rounded-xl space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#1e2a40]/40 pb-3">
+                <div className="p-4 bg-[#1a1c20] border border-[#2a2d34] rounded space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#2a2d34]/40 pb-3">
                     <div className="flex items-center gap-2.5">
                       <img
                         src={state.user.photoURL || "https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y"}
                         alt="Avatar"
-                        className="w-8 h-8 rounded-full border border-slate-700"
+                        className="w-8 h-8 rounded border border-slate-700"
                       />
                       <div>
-                        <h4 className="font-bold text-xs text-slate-200 truncate max-w-[120px]">{state.user.displayName}</h4>
-                        <p className="text-[9px] text-slate-400 truncate max-w-[120px]">{state.user.email}</p>
+                        <h4 className="font-semibold text-xs text-slate-200 truncate max-w-[120px]">{state.user.displayName}</h4>
+                        <p className="text-[9px] text-slate-500 truncate max-w-[120px]">{state.user.email}</p>
                       </div>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="px-2.5 py-1 border border-[#1e2a40] hover:bg-[#111927] rounded-lg text-[10px] font-bold text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
+                      className="px-2 py-1 border border-[#2a2d34] hover:bg-[#121316] rounded text-[10px] font-semibold text-slate-400 hover:text-slate-200 transition-all cursor-pointer"
                     >
                       Sign Out
                     </button>
                   </div>
-                  <p className="text-[10px] text-[#3d5166]">
-                    ✓ Authenticated to Firebase blueprint engine. You can save and load your creations directly from the projects tab.
+                  <p className="text-[10px] text-slate-500">
+                    ✓ Authenticated to cloud server. You can save, load, and share your designs from the Projects tab.
                   </p>
                 </div>
               )}
@@ -1284,14 +1253,14 @@ export default function UIOverlay({
         </div>
 
         {/* FIXED FOOTER CONTROLS */}
-        <div className="p-4 border-t border-[#1e2a40] bg-[#0d1422] space-y-3 shadow-inner">
+        <div className="p-4 border-t border-[#2a2d34] bg-[#121316] space-y-3">
           <button
             onClick={() => dispatch({ type: "CONFIRM_DRAFT" })}
             disabled={draftCount === 0}
-            className={`w-full py-3 rounded-xl font-bold text-sm transition-all shadow-lg cursor-pointer ${
+            className={`w-full py-2.5 rounded font-semibold text-xs transition-all cursor-pointer ${
               draftCount === 0
-                ? "bg-[#080c14]/40 text-[#3d5166] cursor-not-allowed border border-[#1e2a40]"
-                : "bg-[#1a3a5c] hover:bg-[#1e4570] border border-[#3b82f6] text-[#60a5fa] active:scale-98"
+                ? "bg-[#1a1c20] text-slate-600 border border-[#2a2d34] cursor-not-allowed"
+                : "bg-[#121316] hover:bg-[#1a1c20] border border-[#38bdf8] text-[#38bdf8] hover:text-white"
             }`}
           >
             Confirm Structure ({draftCount})
@@ -1301,20 +1270,20 @@ export default function UIOverlay({
             <button
               onClick={() => dispatch({ type: "UNDO" })}
               disabled={state.history.length === 0}
-              className={`py-2 px-3 border rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`py-1.5 px-3 border rounded font-semibold text-xs transition-all flex items-center justify-center cursor-pointer ${
                 state.history.length === 0
-                  ? "border-[#1e2a40]/30 text-[#3d5166] cursor-not-allowed"
-                  : "border-[#1e2a40] text-[#94a3b8] hover:bg-[#111927] active:scale-95"
+                  ? "border-[#2a2d34] text-slate-600 cursor-not-allowed"
+                  : "border-[#2a2d34] bg-[#121316] text-slate-300 hover:bg-[#1a1c20]"
               }`}
             >
-              ↩️ Undo (Ctrl+Z)
+              Undo
             </button>
             
             <button
               onClick={() => dispatch({ type: "CLEAR_SCENE" })}
-              className="py-2 px-3 border border-[#7f1d1d]/60 hover:bg-red-950/20 text-red-400 rounded-xl font-semibold text-xs transition-all flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+              className="py-1.5 px-3 border border-red-950/60 bg-[#121316] hover:bg-red-950/20 text-red-400 rounded font-semibold text-xs transition-all flex items-center justify-center cursor-pointer"
             >
-              🗑️ Clear Scene
+              Clear Scene
             </button>
           </div>
         </div>
@@ -1324,51 +1293,51 @@ export default function UIOverlay({
       <button
         type="button"
         onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute top-1/2 z-30 transform -translate-y-1/2 w-8 h-20 bg-[#0d1422] border-y border-r border-[#1e2a40] rounded-r-xl flex items-center justify-center text-[#60a5fa] hover:text-white cursor-pointer hover:bg-[#131f30] transition-all duration-300 ease-in-out shadow-md ${
+        className={`absolute top-1/2 z-30 transform -translate-y-1/2 w-6 h-16 bg-[#121316] border-y border-r border-[#2a2d34] rounded-r flex items-center justify-center text-[#38bdf8] hover:text-slate-200 cursor-pointer hover:bg-[#1a1c20] transition-all duration-300 ease-in-out shadow ${
           isCollapsed ? "left-0" : "left-96"
         }`}
         title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
       >
-        <span className="text-sm font-bold select-none">{isCollapsed ? "❯" : "❮"}</span>
+        <span className="text-[10px] font-bold select-none">{isCollapsed ? "❯" : "❮"}</span>
       </button>
 
       {/* FLOATING VIEWPORT SETTINGS TOOLBAR (Top Center) */}
       {!isCollapsed && (
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto bg-[#0d1422]/90 backdrop-blur-md border border-[#1e2a40] rounded-full px-4 py-2 flex items-center gap-3 text-xs shadow-xl animate-fadeIn">
+        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto bg-[#121316]/90 backdrop-blur border border-[#2a2d34] rounded px-3 py-1 flex items-center gap-2 text-[10px] shadow-lg animate-fadeIn">
           <button
             onClick={() => dispatch({ type: "TOGGLE_STRESS_HEATMAP" })}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+            className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
               viewSettings.stressHeatmap
-                ? "bg-[#3b82f6]/20 text-[#60a5fa] border border-[#3b82f6]/40"
-                : "text-[#3d5166] hover:text-[#cbd5e1] border border-transparent"
+                ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
+                : "text-slate-500 hover:text-slate-300 border border-transparent"
             }`}
             title="Toggle Stress Heatmap View"
           >
-            🔥 Stress Heatmap
+            Stress Heatmap
           </button>
-          <div className="w-px h-4 bg-[#1e2a40]" />
+          <div className="w-px h-3 bg-[#2a2d34]" />
           <button
             onClick={() => dispatch({ type: "TOGGLE_GRID" })}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+            className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
               viewSettings.showGrid !== false
-                ? "bg-[#3b82f6]/20 text-[#60a5fa] border border-[#3b82f6]/40"
-                : "text-[#3d5166] hover:text-[#cbd5e1] border border-transparent"
+                ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
+                : "text-slate-500 hover:text-slate-300 border border-transparent"
             }`}
             title="Toggle Grid Lines Helper"
           >
-            🌐 Grid Helper
+            Grid Helper
           </button>
-          <div className="w-px h-4 bg-[#1e2a40]" />
+          <div className="w-px h-3 bg-[#2a2d34]" />
           <button
             onClick={() => dispatch({ type: "TOGGLE_AUTO_ROTATE" })}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-medium transition-all cursor-pointer ${
+            className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
               viewSettings.autoRotate
-                ? "bg-[#3b82f6]/20 text-[#60a5fa] border border-[#3b82f6]/40"
-                : "text-[#3d5166] hover:text-[#cbd5e1] border border-transparent"
+                ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
+                : "text-slate-500 hover:text-slate-300 border border-transparent"
             }`}
             title="Toggle Auto-Rotate Camera orbit"
           >
-            🔄 Auto-Rotate
+            Auto-Rotate
           </button>
         </div>
       )}
