@@ -13,6 +13,8 @@ export default function Cube({
   isUnstable = false,
   stressHeatmapEnabled = false,
   stressRatio = 0,
+  isOpen = false,
+  walkthroughActive = false,
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -36,7 +38,7 @@ export default function Cube({
     // Pulsing red effect for unstable cubes
     cubeColor = "#ef4444";
     emissiveColor = hovered ? "#dc2626" : "#991b1b";
-  } else if (hovered) {
+  } else if (hovered && !walkthroughActive) {
     emissiveColor = "#1d4ed8";
   }
 
@@ -46,7 +48,9 @@ export default function Cube({
     <group
       position={[x, y, z]}
       rotation={[0, rotRad, 0]}
+      userData={{ cubeId: cube.id, shape }}
       onPointerOver={(e) => {
+        if (walkthroughActive) return;
         e.stopPropagation();
         setHovered(true);
 
@@ -55,8 +59,12 @@ export default function Cube({
 
         onHover(newPos);
       }}
-      onPointerOut={() => setHovered(false)}
+      onPointerOut={() => {
+        if (walkthroughActive) return;
+        setHovered(false);
+      }}
       onPointerDown={(e) => {
+        if (walkthroughActive) return;
         e.stopPropagation();
 
         if (e.button === 0) {
@@ -71,7 +79,7 @@ export default function Cube({
         }
       }}
     >
-      {renderShapeGeometry(shape, cubeColor, emissiveColor, status === "draft")}
+      {renderShapeGeometry(shape, cubeColor, emissiveColor, status === "draft", isOpen)}
     </group>
   );
 }

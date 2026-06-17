@@ -13,6 +13,7 @@ export default function CubeManager({ dispatch, state }) {
   const [lineStart, setLineStart] = useState(null);
   const [heightOffset, setHeightOffset] = useState(0);
   const activeRotation = state.rotationY || 0;
+  const walkthroughActive = state.viewSettings?.walkthroughActive || false;
 
   // Reset line start when tool mode changes
   const toolMode = state.viewSettings?.toolMode || "single";
@@ -157,46 +158,48 @@ export default function CubeManager({ dispatch, state }) {
   return (
     <>
       {/* Ground plane for interaction */}
-      <mesh
-        rotation={[-Math.PI / 2, 0, 0]}
-        position={[0, 0, 0]}
-        onPointerMove={(e) => {
-          const point = e.point;
-          setGhostPosition([Math.round(point.x), 0.5, Math.round(point.z)]);
-        }}
-        onPointerDown={(e) => {
-          e.stopPropagation();
-          if (e.button === 0) {
+      {!walkthroughActive && (
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, 0, 0]}
+          onPointerMove={(e) => {
             const point = e.point;
-            handleInteract([Math.round(point.x), 0.5, Math.round(point.z)]);
-          }
-        }}
-        onContextMenu={(e) => {
-          e.stopPropagation();
-          if (window.__gestureRotateActive) return;
-          const point = e.point;
-          
-          if (toolMode === "line" && lineStart) {
-            setLineStart(null);
-            return;
-          }
+            setGhostPosition([Math.round(point.x), 0.5, Math.round(point.z)]);
+          }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            if (e.button === 0) {
+              const point = e.point;
+              handleInteract([Math.round(point.x), 0.5, Math.round(point.z)]);
+            }
+          }}
+          onContextMenu={(e) => {
+            e.stopPropagation();
+            if (window.__gestureRotateActive) return;
+            const point = e.point;
+            
+            if (toolMode === "line" && lineStart) {
+              setLineStart(null);
+              return;
+            }
 
-          // Find cube at position and delete it
-          const allCubes = [...state.draftCubes, ...state.confirmedCubes];
-          const cubeToDelete = allCubes.find(
-            (cube) =>
-              cube.x === Math.round(point.x) &&
-              cube.y === 0.5 &&
-              cube.z === Math.round(point.z),
-          );
-          if (cubeToDelete) {
-            handleDelete(cubeToDelete.id, cubeToDelete.status);
-          }
-        }}
-      >
-        <planeGeometry args={[200, 200]} />
-        <meshBasicMaterial visible={false} />
-      </mesh>
+            // Find cube at position and delete it
+            const allCubes = [...state.draftCubes, ...state.confirmedCubes];
+            const cubeToDelete = allCubes.find(
+              (cube) =>
+                cube.x === Math.round(point.x) &&
+                cube.y === 0.5 &&
+                cube.z === Math.round(point.z),
+            );
+            if (cubeToDelete) {
+              handleDelete(cubeToDelete.id, cubeToDelete.status);
+            }
+          }}
+        >
+          <planeGeometry args={[200, 200]} />
+          <meshBasicMaterial visible={false} />
+        </mesh>
+      )}
 
       {/* Render confirmed cubes */}
       {state.confirmedCubes.map((cube) => (
@@ -209,6 +212,8 @@ export default function CubeManager({ dispatch, state }) {
           isUnstable={state.collapseState.unstableIds.includes(cube.id)}
           stressHeatmapEnabled={state.viewSettings?.stressHeatmap}
           stressRatio={state.structuralMetrics?.stresses?.[cube.id]?.stressRatio || 0}
+          isOpen={state.openInteractiveIds?.includes(cube.id)}
+          walkthroughActive={walkthroughActive}
         />
       ))}
 
@@ -220,11 +225,13 @@ export default function CubeManager({ dispatch, state }) {
           onHover={handleHover}
           onPlace={handleInteract}
           onDelete={() => handleDelete(cube.id, cube.status)}
+          isOpen={state.openInteractiveIds?.includes(cube.id)}
+          walkthroughActive={walkthroughActive}
         />
       ))}
 
       {/* Ghost cubes for preview */}
-      {ghostPath.map((pos, idx) => (
+      {!walkthroughActive && ghostPath.map((pos, idx) => (
         <GhostCube
           key={`${pos[0]}-${pos[1]}-${pos[2]}-${idx}`}
           position={pos}

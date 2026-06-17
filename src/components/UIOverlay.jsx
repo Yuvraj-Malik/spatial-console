@@ -425,7 +425,7 @@ export default function UIOverlay({
   return (
     <>
       <div className={`absolute top-0 left-0 h-full w-96 z-20 pointer-events-auto flex flex-col bg-[#121316] border-r border-[#2a2d34] text-slate-300 shadow-2xl transition-transform duration-300 ease-in-out font-sans ${
-        isCollapsed ? "-translate-x-full" : "translate-x-0"
+        (isCollapsed || viewSettings?.walkthroughActive) ? "-translate-x-full" : "translate-x-0"
       }`}>
         {/* Platform Header */}
         <div className="p-4 border-b border-[#2a2d34] flex items-center justify-between">
@@ -1290,56 +1290,141 @@ export default function UIOverlay({
       </div>
 
       {/* Collapse/Expand Toggle Button */}
-      <button
-        type="button"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        className={`absolute top-1/2 z-30 transform -translate-y-1/2 w-6 h-16 bg-[#121316] border-y border-r border-[#2a2d34] rounded-r flex items-center justify-center text-[#38bdf8] hover:text-slate-200 cursor-pointer hover:bg-[#1a1c20] transition-all duration-300 ease-in-out shadow ${
-          isCollapsed ? "left-0" : "left-96"
-        }`}
-        title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-      >
-        <span className="text-[10px] font-bold select-none">{isCollapsed ? "❯" : "❮"}</span>
-      </button>
+      {!viewSettings?.walkthroughActive && (
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className={`absolute top-1/2 z-30 transform -translate-y-1/2 w-6 h-16 bg-[#121316] border-y border-r border-[#2a2d34] rounded-r flex items-center justify-center text-[#38bdf8] hover:text-slate-200 cursor-pointer hover:bg-[#1a1c20] transition-all duration-300 ease-in-out shadow ${
+            isCollapsed ? "left-0" : "left-96"
+          }`}
+          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+        >
+          <span className="text-[10px] font-bold select-none">{isCollapsed ? "❯" : "❮"}</span>
+        </button>
+      )}
 
       {/* FLOATING VIEWPORT SETTINGS TOOLBAR (Top Center) */}
-      {!isCollapsed && (
+      {(!isCollapsed || viewSettings?.walkthroughActive) && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto bg-[#121316]/90 backdrop-blur border border-[#2a2d34] rounded px-3 py-1 flex items-center gap-2 text-[10px] shadow-lg animate-fadeIn">
+          {!viewSettings?.walkthroughActive && (
+            <>
+              <button
+                onClick={() => dispatch({ type: "TOGGLE_STRESS_HEATMAP" })}
+                className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
+                  viewSettings.stressHeatmap
+                    ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
+                    : "text-slate-500 hover:text-slate-300 border border-transparent"
+                }`}
+                title="Toggle Stress Heatmap View"
+              >
+                Stress Heatmap
+              </button>
+              <div className="w-px h-3 bg-[#2a2d34]" />
+              <button
+                onClick={() => dispatch({ type: "TOGGLE_GRID" })}
+                className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
+                  viewSettings.showGrid !== false
+                    ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
+                    : "text-slate-500 hover:text-slate-300 border border-transparent"
+                }`}
+                title="Toggle Grid Lines Helper"
+              >
+                Grid Helper
+              </button>
+              <div className="w-px h-3 bg-[#2a2d34]" />
+              <button
+                onClick={() => dispatch({ type: "TOGGLE_AUTO_ROTATE" })}
+                className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
+                  viewSettings.autoRotate
+                    ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
+                    : "text-slate-500 hover:text-slate-300 border border-transparent"
+                }`}
+                title="Toggle Auto-Rotate Camera orbit"
+              >
+                Auto-Rotate
+              </button>
+              <div className="w-px h-3 bg-[#2a2d34]" />
+            </>
+          )}
           <button
-            onClick={() => dispatch({ type: "TOGGLE_STRESS_HEATMAP" })}
+            onClick={() => dispatch({ type: "TOGGLE_WALKTHROUGH" })}
             className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
-              viewSettings.stressHeatmap
+              viewSettings.walkthroughActive
                 ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
                 : "text-slate-500 hover:text-slate-300 border border-transparent"
             }`}
-            title="Toggle Stress Heatmap View"
+            title="Toggle First-Person Walkthrough mode"
           >
-            Stress Heatmap
-          </button>
-          <div className="w-px h-3 bg-[#2a2d34]" />
-          <button
-            onClick={() => dispatch({ type: "TOGGLE_GRID" })}
-            className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
-              viewSettings.showGrid !== false
-                ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
-                : "text-slate-500 hover:text-slate-300 border border-transparent"
-            }`}
-            title="Toggle Grid Lines Helper"
-          >
-            Grid Helper
-          </button>
-          <div className="w-px h-3 bg-[#2a2d34]" />
-          <button
-            onClick={() => dispatch({ type: "TOGGLE_AUTO_ROTATE" })}
-            className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
-              viewSettings.autoRotate
-                ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
-                : "text-slate-500 hover:text-slate-300 border border-transparent"
-            }`}
-            title="Toggle Auto-Rotate Camera orbit"
-          >
-            Auto-Rotate
+            Walkthrough Mode 🚶‍♂️
           </button>
         </div>
+      )}
+
+      {/* WALKTHROUGH HUD OVERLAYS */}
+      {viewSettings?.walkthroughActive && (
+        <>
+          {/* Centered Crosshair */}
+          <div className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+            <div
+              id="hud-crosshair"
+              className="w-1.5 h-1.5 rounded-full bg-white/60 transition-all duration-150"
+            />
+          </div>
+
+          {/* Bottom HUD Banner */}
+          <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto bg-[#121316]/95 backdrop-blur-md border border-[#2a2d34] rounded-lg px-6 py-3 flex items-center gap-6 shadow-2xl text-xs font-sans text-slate-300 animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-500 uppercase tracking-wider text-[9px] font-semibold">Controls:</span>
+              <kbd className="bg-[#1a1c20] border border-[#2a2d34] px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-200">WASD</kbd>
+              <span className="text-slate-400">Walk</span>
+            </div>
+            <div className="w-px h-4 bg-[#2a2d34]" />
+            <div className="flex items-center gap-2">
+              <kbd className="bg-[#1a1c20] border border-[#2a2d34] px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-200">Mouse</kbd>
+              <span className="text-slate-400">Look</span>
+            </div>
+            <div className="w-px h-4 bg-[#2a2d34]" />
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 text-[10px] italic">Click doors or windows to open/close</span>
+            </div>
+            <div className="w-px h-4 bg-[#2a2d34]" />
+            <button
+              onClick={() => dispatch({ type: "TOGGLE_WALKTHROUGH" })}
+              className="px-3 py-1 bg-red-950/40 hover:bg-red-900/40 border border-red-500/30 hover:border-red-500/60 text-red-400 hover:text-white rounded font-semibold transition-all cursor-pointer"
+            >
+              Exit Walkthrough
+            </button>
+          </div>
+
+          {/* Locked Pointer Lock Overlay screen */}
+          <div
+            id="lock-screen-overlay"
+            style={{ display: "flex" }}
+            className="absolute inset-0 bg-[#0d1324]/85 backdrop-blur-sm z-30 flex flex-col items-center justify-center space-y-4"
+          >
+            <div className="text-center space-y-2">
+              <h2 className="text-xl font-bold text-slate-100 tracking-wide">First-Person Walkthrough</h2>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto leading-relaxed">
+                Click anywhere on the screen to capture your mouse pointer and look around.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                const canvas = document.querySelector("canvas");
+                if (canvas) canvas.click();
+              }}
+              className="px-5 py-2 bg-[#121316] hover:bg-[#1a1c20] border border-[#38bdf8] text-[#38bdf8] hover:text-white rounded text-xs font-bold transition-all shadow-lg cursor-pointer"
+            >
+              Start Exploring
+            </button>
+            <button
+              onClick={() => dispatch({ type: "TOGGLE_WALKTHROUGH" })}
+              className="text-xs text-slate-500 hover:text-slate-300 font-medium underline"
+            >
+              Go back to editor
+            </button>
+          </div>
+        </>
       )}
     </>
   );

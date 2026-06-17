@@ -4,6 +4,7 @@ import * as THREE from "three";
 import CubeManager from "./CubeManager";
 import GridHelper from "./GridHelper";
 import GestureCursor from "./GestureCursor";
+import WalkthroughController from "./WalkthroughController";
 
 export default function SceneCanvas({
   dispatch,
@@ -44,29 +45,33 @@ export default function SceneCanvas({
       <color attach="background" args={["#0d1324"]} />
 
       {/* Grid Helper */}
-      {state.viewSettings?.showGrid !== false && <GridHelper />}
+      {state.viewSettings?.showGrid !== false && !state.viewSettings?.walkthroughActive && <GridHelper />}
 
       {/* Cube Manager */}
       <CubeManager dispatch={dispatch} state={state} />
 
       {/* Gesture Cursor */}
-      <GestureCursor position={gestureCursorPos} visible={gestureMode} />
+      <GestureCursor position={gestureCursorPos} visible={gestureMode && !state.viewSettings?.walkthroughActive} />
 
       {/* Camera Controls */}
-      <OrbitControls
-        enablePan={true}
-        enableZoom={true}
-        enableRotate={true}
-        autoRotate={state.viewSettings?.autoRotate || false}
-        autoRotateSpeed={0.8}
-        target={[0, 0, 0]}
-        maxPolarAngle={Math.PI / 2 - 0.05}
-        mouseButtons={{
-          LEFT: null,
-          MIDDLE: THREE.MOUSE.DOLLY,
-          RIGHT: THREE.MOUSE.ROTATE,
-        }}
-      />
+      {state.viewSettings?.walkthroughActive ? (
+        <WalkthroughController state={state} dispatch={dispatch} />
+      ) : (
+        <OrbitControls
+          enablePan={true}
+          enableZoom={true}
+          enableRotate={true}
+          autoRotate={state.viewSettings?.autoRotate || false}
+          autoRotateSpeed={0.8}
+          target={[0, 0, 0]}
+          maxPolarAngle={Math.PI / 2 - 0.05}
+          mouseButtons={{
+            LEFT: null,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.ROTATE,
+          }}
+        />
+      )}
     </Canvas>
   );
 }

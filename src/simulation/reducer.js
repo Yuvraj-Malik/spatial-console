@@ -16,11 +16,13 @@ export const initialState = {
     user: null, // NEW: User Account State
     currentShape: "cube", // NEW: Active geometry shape
     rotationY: 0, // NEW: Active Y-axis rotation index (0=0, 1=90, 2=180, 3=270)
+    openInteractiveIds: [], // NEW: Tracks open doors and windows
     // NEW: View settings
     viewSettings: {
         stressHeatmap: false,
         showGrid: true,
         autoRotate: false,
+        walkthroughActive: false, // NEW: Walkthrough view mode active
         toolMode: "single" // "single" or "line"
     },
     // NEW: Pre-calculated metrics
@@ -243,6 +245,7 @@ export function simulationReducer(state, action) {
             return {
                 ...state,
                 confirmedCubes: newConfirmedCubes,
+                openInteractiveIds: state.openInteractiveIds.filter(id => id !== action.payload.id),
                 structuralMetrics: metrics,
                 history: [
                     ...state.history,
@@ -341,6 +344,28 @@ export function simulationReducer(state, action) {
             };
         }
 
+        case "TOGGLE_WALKTHROUGH": {
+            return {
+                ...state,
+                viewSettings: {
+                    ...state.viewSettings,
+                    walkthroughActive: !state.viewSettings.walkthroughActive
+                }
+            };
+        }
+
+        case "TOGGLE_INTERACTIVE_BLOCK": {
+            const id = action.payload.id;
+            const isOpen = state.openInteractiveIds.includes(id);
+            const newOpenIds = isOpen
+                ? state.openInteractiveIds.filter(x => x !== id)
+                : [...state.openInteractiveIds, id];
+            return {
+                ...state,
+                openInteractiveIds: newOpenIds
+            };
+        }
+
         // NEW: Loader & Utilities
         case "LOAD_TEMPLATE": {
             const templateCubes = action.payload.cubes.map((c, idx) => ({
@@ -394,11 +419,16 @@ export function simulationReducer(state, action) {
                 confirmedCubes: [],
                 draftCubes: [],
                 history: [],
+                openInteractiveIds: [],
                 structuralMetrics: calculateStructuralMetrics([]),
                 collapseState: {
                     warningActive: false,
                     unstableIds: [],
                     countdown: 3
+                },
+                viewSettings: {
+                    ...state.viewSettings,
+                    walkthroughActive: false
                 }
             };
         }

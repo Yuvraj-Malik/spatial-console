@@ -44,7 +44,7 @@ wedgeGeometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3));
 wedgeGeometry.setIndex(indices);
 wedgeGeometry.computeVertexNormals();
 
-export function renderShapeGeometry(shape, color, emissiveColor, isDraft) {
+export function renderShapeGeometry(shape, color, emissiveColor, isDraft, isOpen = false) {
   const materialProps = {
     color,
     transparent: isDraft,
@@ -115,23 +115,29 @@ export function renderShapeGeometry(shape, color, emissiveColor, isDraft) {
         </mesh>
       );
 
-    case "door":
+    case "door": {
+      const hingeOffset = -0.45;
+      const doorAngle = isOpen ? -Math.PI / 2 : 0;
       return (
-        <group>
-          {/* Wood panel */}
-          <mesh position={[0, 0, 0]}>
-            <boxGeometry args={[0.9, 1, 0.08]} />
-            <meshStandardMaterial {...materialProps} />
-          </mesh>
-          {/* Golden Handle */}
-          <mesh position={[0.35, 0, 0.06]}>
-            <sphereGeometry args={[0.045, 8, 8]} />
-            <meshStandardMaterial color="#eab308" metalness={1.0} roughness={0.1} />
-          </mesh>
+        <group position={[hingeOffset, 0, 0]}>
+          <group rotation={[0, doorAngle, 0]} position={[-hingeOffset, 0, 0]}>
+            {/* Wood panel */}
+            <mesh position={[0, 0, 0]}>
+              <boxGeometry args={[0.9, 1, 0.08]} />
+              <meshStandardMaterial {...materialProps} />
+            </mesh>
+            {/* Golden Handle */}
+            <mesh position={[0.35, 0, 0.06]}>
+              <sphereGeometry args={[0.045, 8, 8]} />
+              <meshStandardMaterial color="#eab308" metalness={1.0} roughness={0.1} />
+            </mesh>
+          </group>
         </group>
       );
+    }
 
-    case "window":
+    case "window": {
+      const glassY = isOpen ? 0.65 : 0;
       return (
         <group>
           {/* Frame */}
@@ -140,7 +146,7 @@ export function renderShapeGeometry(shape, color, emissiveColor, isDraft) {
             <meshStandardMaterial color={color} wireframe={true} />
           </mesh>
           {/* Blue semi-transparent glass */}
-          <mesh>
+          <mesh position={[0, glassY, 0]}>
             <boxGeometry args={[0.85, 0.85, 0.03]} />
             <meshStandardMaterial
               color="#38bdf8"
@@ -152,6 +158,7 @@ export function renderShapeGeometry(shape, color, emissiveColor, isDraft) {
           </mesh>
         </group>
       );
+    }
 
     case "bed":
       return (
