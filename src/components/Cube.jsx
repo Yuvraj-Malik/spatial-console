@@ -15,6 +15,7 @@ export default function Cube({
   stressRatio = 0,
   isOpen = false,
   walkthroughActive = false,
+  lightsOn = true,
 }) {
   const [hovered, setHovered] = useState(false);
 
@@ -23,6 +24,9 @@ export default function Cube({
   // Determine cube color based on state
   let cubeColor = getMaterialColor(material);
   let emissiveColor = getMaterialEmissive(material);
+  if (!lightsOn && emissiveColor) {
+     emissiveColor = undefined;
+  }
 
   if (status === "confirmed" && stressHeatmapEnabled) {
     if (stressRatio > 1.0) {

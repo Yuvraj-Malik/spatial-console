@@ -38,9 +38,9 @@ export default function SceneCanvas({
       }}
     >
       {/* Lighting */}
-      <ambientLight intensity={0.6} />
-      <directionalLight position={[5, 10, 5]} intensity={1.5} />
-      <hemisphereLight args={["#3b82f6", "#0f172a", 0.6]} />
+      <ambientLight intensity={state.viewSettings?.lightsOn !== false ? 0.6 : 0.05} />
+      <directionalLight position={[5, 10, 5]} intensity={state.viewSettings?.lightsOn !== false ? 1.5 : 0.1} />
+      <hemisphereLight args={["#3b82f6", "#0f172a", state.viewSettings?.lightsOn !== false ? 0.6 : 0.05]} />
 
       <color attach="background" args={["#0d1324"]} />
 

@@ -214,6 +214,7 @@ export default function CubeManager({ dispatch, state }) {
           stressRatio={state.structuralMetrics?.stresses?.[cube.id]?.stressRatio || 0}
           isOpen={state.openInteractiveIds?.includes(cube.id)}
           walkthroughActive={walkthroughActive}
+          lightsOn={state.viewSettings?.lightsOn !== false}
         />
       ))}
 
@@ -227,6 +228,7 @@ export default function CubeManager({ dispatch, state }) {
           onDelete={() => handleDelete(cube.id, cube.status)}
           isOpen={state.openInteractiveIds?.includes(cube.id)}
           walkthroughActive={walkthroughActive}
+          lightsOn={state.viewSettings?.lightsOn !== false}
         />
       ))}
 

@@ -23,8 +23,11 @@ export const initialState = {
         showGrid: true,
         autoRotate: false,
         walkthroughActive: false, // NEW: Walkthrough view mode active
-        toolMode: "single" // "single" or "line"
+        toolMode: "single", // "single" or "line"
+        lightsOn: true, // NEW: Lighting toggle
     },
+    sidebarOpen: false, // NEW: Sidebar visibility
+
     // NEW: Pre-calculated metrics
     structuralMetrics: {
         totalMass: 0,
@@ -351,6 +354,23 @@ export function simulationReducer(state, action) {
                     ...state.viewSettings,
                     walkthroughActive: !state.viewSettings.walkthroughActive
                 }
+            };
+        }
+
+        case "TOGGLE_LIGHTS": {
+            return {
+                ...state,
+                viewSettings: {
+                    ...state.viewSettings,
+                    lightsOn: !state.viewSettings.lightsOn
+                }
+            };
+        }
+
+        case "TOGGLE_SIDEBAR": {
+            return {
+                ...state,
+                sidebarOpen: !state.sidebarOpen
             };
         }
 

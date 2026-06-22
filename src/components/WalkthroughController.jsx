@@ -13,7 +13,14 @@ export default function WalkthroughController({ state, dispatch }) {
     backward: false,
     left: false,
     right: false,
+    jump: false,
   });
+
+  const velocityY = useRef(0);
+  const isJumping = useRef(false);
+  const gravity = 20.0;
+  // jumpSpeed derived from physics: v = sqrt(2 * g * h), h = 1.15 units (clears 1 full block)
+  const jumpSpeed = Math.sqrt(2 * 20.0 * 1.15); // ≈ 6.78
 
   const speed = 4.0; // units per second
   const eyeHeight = 1.6;
@@ -40,6 +47,9 @@ export default function WalkthroughController({ state, dispatch }) {
         case "ArrowRight":
           keys.current.right = true;
           break;
+        case "Space":
+          keys.current.jump = true;
+          break;
         default:
           break;
       }
@@ -63,6 +73,9 @@ export default function WalkthroughController({ state, dispatch }) {
         case "ArrowRight":
           keys.current.right = false;
           break;
+        case "Space":
+          keys.current.jump = false;
+          break;
         default:
           break;
       }
@@ -82,9 +95,20 @@ export default function WalkthroughController({ state, dispatch }) {
 
     const cubes = [...state.confirmedCubes, ...state.draftCubes];
     if (cubes.length > 0) {
+      let minX = Infinity, maxX = -Infinity;
+      let minZ = Infinity, maxZ = -Infinity;
+      for (const c of cubes) {
+        if (c.x < minX) minX = c.x;
+        if (c.x > maxX) maxX = c.x;
+        if (c.z < minZ) minZ = c.z;
+        if (c.z > maxZ) maxZ = c.z;
+      }
+      startX = (minX + maxX) / 2;
+      startZ = maxZ + 4; // spawn in front of the building
+
       // If there are blocks under the starting point, stand on them
       const cellCubes = cubes.filter(
-        (c) => Math.round(c.x) === startX && Math.round(c.z) === startZ
+        (c) => Math.round(c.x) === Math.round(startX) && Math.round(c.z) === Math.round(startZ)
       );
       if (cellCubes.length > 0) {
         const maxY = Math.max(...cellCubes.map((c) => c.y));
@@ -103,15 +127,17 @@ export default function WalkthroughController({ state, dispatch }) {
     };
   }, [camera, state.confirmedCubes, state.draftCubes]);
 
-  // Click handler to interact with doors/windows
+  // Click handler to interact with doors/windows and edit blocks
   useEffect(() => {
-    const handleClick = () => {
+    const handleClick = (e) => {
       if (!plcRef.current || !plcRef.current.isLocked) return;
 
       raycaster.setFromCamera({ x: 0, y: 0 }, camera);
       const intersects = raycaster.intersectObjects(scene.children, true);
 
       let hit = null;
+      let faceNormal = null;
+      let hitObject = null;
       for (const intersection of intersects) {
         let obj = intersection.object;
         let cubeId = null;
@@ -125,22 +151,59 @@ export default function WalkthroughController({ state, dispatch }) {
           obj = obj.parent;
         }
 
-        if (cubeId !== null && (shape === "door" || shape === "window")) {
-          if (intersection.distance <= 3.5) {
-            hit = { cubeId, shape };
-            break;
-          }
+        if (cubeId !== null && intersection.distance <= 5.0) {
+          hit = { cubeId, shape };
+          faceNormal = intersection.face ? intersection.face.normal : null;
+          hitObject = obj;
+          break;
         }
       }
 
       if (hit) {
-        dispatch({ type: "TOGGLE_INTERACTIVE_BLOCK", payload: { id: hit.cubeId } });
+        // Door/Window Interaction
+        if ((hit.shape === "door" || hit.shape === "window") && e.button === 0) {
+          dispatch({ type: "TOGGLE_INTERACTIVE_BLOCK", payload: { id: hit.cubeId } });
+          return;
+        }
+
+        // Left Click: Place block
+        if (e.button === 0 && faceNormal && hitObject) {
+          const pos = hitObject.position;
+          const newPos = [pos.x + faceNormal.x, pos.y + faceNormal.y, pos.z + faceNormal.z];
+          dispatch({
+            type: "PLACE_DRAFT",
+            payload: {
+              x: newPos[0],
+              y: newPos[1],
+              z: newPos[2],
+              material: state.currentMaterial,
+              shape: state.currentShape || "cube",
+              rotationY: state.rotationY || 0
+            }
+          });
+          dispatch({ type: "CONFIRM_DRAFT" });
+        }
+
+        // Middle Click: Pick up block material/shape
+        if (e.button === 1) {
+          const cube = state.confirmedCubes.find(c => c.id === hit.cubeId) || state.draftCubes.find(c => c.id === hit.cubeId);
+          if (cube) {
+            dispatch({ type: "SET_MATERIAL", payload: cube.material });
+            dispatch({ type: "SET_SHAPE", payload: cube.shape });
+            if (cube.rotationY !== undefined) dispatch({ type: "SET_ROTATION", payload: cube.rotationY });
+          }
+        }
+
+        // Right Click: Delete block
+        if (e.button === 2) {
+          dispatch({ type: "DELETE_CONFIRMED", payload: { id: hit.cubeId } });
+        }
       }
     };
 
-    window.addEventListener("click", handleClick);
-    return () => window.removeEventListener("click", handleClick);
-  }, [camera, scene, raycaster, dispatch]);
+    window.addEventListener("mousedown", handleClick);
+    return () => window.removeEventListener("mousedown", handleClick);
+  }, [camera, scene, raycaster, dispatch, state.currentMaterial, state.currentShape, state.rotationY, state.confirmedCubes, state.draftCubes]);
 
   // Helper functions for collision
   const getShapeTopY = (cube) => {
@@ -305,10 +368,44 @@ export default function WalkthroughController({ state, dispatch }) {
     // 3. Gravity and Floor Snapping
     const feetY = camera.position.y - eyeHeight;
     const targetFloorY = getFloorY(camera.position.x, camera.position.z, feetY);
-    const targetCameraY = targetFloorY + eyeHeight;
 
-    // Smooth height adjustment for stair climbing and falling
-    camera.position.y += (targetCameraY - camera.position.y) * 12 * dt;
+    // Apply jump impulse FIRST (before gravity/floor checks)
+    if (keys.current.jump && !isJumping.current && feetY <= targetFloorY + 0.15) {
+      velocityY.current = jumpSpeed;
+      isJumping.current = true;
+      keys.current.jump = false;
+    }
+
+    let isGrounded = false;
+
+    if (isJumping.current || velocityY.current > 0.01) {
+      // Ascending or mid-air: apply gravity, NO floor snap
+      velocityY.current -= gravity * dt;
+      camera.position.y += velocityY.current * dt;
+
+      // Ceiling collision: if we hit a block above, kill upward velocity
+      if (checkCollisionAt(camera.position.x, camera.position.y, camera.position.z)) {
+        velocityY.current = -0.1;
+      }
+
+      // Transition to falling once velocity goes negative
+      if (velocityY.current <= 0) {
+        isJumping.current = false;
+      }
+    } else {
+      // Falling or grounded: apply gravity then snap to floor
+      velocityY.current -= gravity * dt;
+      camera.position.y += velocityY.current * dt;
+
+      const newFeetY = camera.position.y - eyeHeight;
+      if (newFeetY <= targetFloorY + 0.05) {
+        // Snap to floor surface
+        camera.position.y = targetFloorY + eyeHeight;
+        velocityY.current = 0;
+        isGrounded = true;
+        isJumping.current = false;
+      }
+    }
 
     // Check if looking at an interactable door/window to update HUD state
     raycaster.setFromCamera({ x: 0, y: 0 }, camera);

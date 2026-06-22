@@ -49,6 +49,11 @@ const SHAPE_CATEGORIES = [
       { id: "table", name: "Coffee Table", emoji: "🪵" },
       { id: "sink", name: "Kitchen Sink", emoji: "𚰰" },
       { id: "toilet", name: "Bathroom Toilet", emoji: "🚽" },
+      { id: "bathtub", name: "Bathtub", emoji: "🛁" },
+      { id: "kitchen_cabinet", name: "Kitchen Cabinet", emoji: "🗄️" },
+      { id: "fridge", name: "Refrigerator", emoji: "🧊" },
+      { id: "tv", name: "Television", emoji: "📺" },
+      { id: "painting", name: "Wall Painting", emoji: "🖼️" },
     ]
   },
   {
@@ -81,7 +86,7 @@ export default function UIOverlay({
   const [jsonInput, setJsonInput] = useState("");
   const [copied, setCopied] = useState(false);
   const [importError, setImportError] = useState("");
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(true);
   const [showHelp, setShowHelp] = useState(false); // Help overlay state
 
   // Accordion Expand States
@@ -1342,6 +1347,18 @@ export default function UIOverlay({
                 title="Toggle Auto-Rotate Camera orbit"
               >
                 Auto-Rotate
+              </button>
+              <div className="w-px h-3 bg-[#2a2d34]" />
+              <button
+                onClick={() => dispatch({ type: "TOGGLE_LIGHTS" })}
+                className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
+                  viewSettings.lightsOn !== false
+                    ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
+                    : "text-slate-500 hover:text-slate-300 border border-transparent"
+                }`}
+                title="Toggle Scene Lighting"
+              >
+                Lights {viewSettings.lightsOn !== false ? "💡" : "🌑"}
               </button>
               <div className="w-px h-3 bg-[#2a2d34]" />
             </>

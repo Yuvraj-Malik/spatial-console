@@ -404,6 +404,137 @@ export function renderShapeGeometry(shape, color, emissiveColor, isDraft, isOpen
         </group>
       );
 
+    case "kitchen_cabinet":
+      return (
+        <group>
+          {/* Main body */}
+          <mesh position={[0, -0.1, 0]}>
+            <boxGeometry args={[1, 0.8, 0.8]} />
+            <meshStandardMaterial color="#d1d5db" roughness={0.6} />
+          </mesh>
+          {/* Countertop */}
+          <mesh position={[0, 0.32, 0]}>
+            <boxGeometry args={[1.05, 0.06, 0.85]} />
+            <meshStandardMaterial color="#1f2937" metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Doors */}
+          <mesh position={[-0.25, -0.1, 0.41]}>
+            <boxGeometry args={[0.48, 0.75, 0.02]} />
+            <meshStandardMaterial color="#f3f4f6" />
+          </mesh>
+          <mesh position={[0.25, -0.1, 0.41]}>
+            <boxGeometry args={[0.48, 0.75, 0.02]} />
+            <meshStandardMaterial color="#f3f4f6" />
+          </mesh>
+          {/* Handles */}
+          <mesh position={[-0.05, 0.1, 0.43]}>
+            <boxGeometry args={[0.02, 0.15, 0.02]} />
+            <meshStandardMaterial color="#9ca3af" metalness={0.9} />
+          </mesh>
+          <mesh position={[0.05, 0.1, 0.43]}>
+            <boxGeometry args={[0.02, 0.15, 0.02]} />
+            <meshStandardMaterial color="#9ca3af" metalness={0.9} />
+          </mesh>
+        </group>
+      );
+
+    case "fridge":
+      return (
+        <group>
+          {/* Main body */}
+          <mesh position={[0, 0.25, 0]}>
+            <boxGeometry args={[0.9, 1.5, 0.9]} />
+            <meshStandardMaterial color="#e5e7eb" metalness={0.4} roughness={0.3} />
+          </mesh>
+          {/* Freezer Door */}
+          <mesh position={[0, 0.7, 0.46]}>
+            <boxGeometry args={[0.88, 0.55, 0.05]} />
+            <meshStandardMaterial color="#f3f4f6" metalness={0.5} roughness={0.2} />
+          </mesh>
+          {/* Fridge Door */}
+          <mesh position={[0, 0.05, 0.46]}>
+            <boxGeometry args={[0.88, 0.7, 0.05]} />
+            <meshStandardMaterial color="#f3f4f6" metalness={0.5} roughness={0.2} />
+          </mesh>
+          {/* Handles */}
+          <mesh position={[-0.35, 0.7, 0.5]}>
+            <boxGeometry args={[0.03, 0.3, 0.03]} />
+            <meshStandardMaterial color="#9ca3af" metalness={1.0} />
+          </mesh>
+          <mesh position={[-0.35, 0.1, 0.5]}>
+            <boxGeometry args={[0.03, 0.4, 0.03]} />
+            <meshStandardMaterial color="#9ca3af" metalness={1.0} />
+          </mesh>
+        </group>
+      );
+
+    case "bathtub":
+      return (
+        <group>
+          {/* Tub Base */}
+          <mesh position={[0, -0.2, 0]}>
+            <boxGeometry args={[1.8, 0.6, 0.9]} />
+            <meshStandardMaterial color="#f8fafc" roughness={0.1} />
+          </mesh>
+          {/* Inner Hollow (simulated by a smaller slightly lower box inside) */}
+          <mesh position={[0, -0.15, 0]}>
+            <boxGeometry args={[1.6, 0.55, 0.7]} />
+            <meshStandardMaterial color="#e2e8f0" roughness={0.2} />
+          </mesh>
+          {/* Faucet */}
+          <mesh position={[-0.85, 0.2, 0]}>
+            <cylinderGeometry args={[0.03, 0.03, 0.2, 8]} />
+            <meshStandardMaterial color="#94a3b8" metalness={1.0} />
+          </mesh>
+          <mesh position={[-0.75, 0.3, 0]} rotation={[0, 0, Math.PI / 2]}>
+            <cylinderGeometry args={[0.03, 0.03, 0.2, 8]} />
+            <meshStandardMaterial color="#94a3b8" metalness={1.0} />
+          </mesh>
+        </group>
+      );
+
+    case "tv":
+      return (
+        <group>
+          {/* Screen */}
+          <mesh position={[0, 0.2, 0]}>
+            <boxGeometry args={[1.6, 0.9, 0.05]} />
+            <meshStandardMaterial color="#111827" roughness={0.1} metalness={0.9} />
+          </mesh>
+          {/* Frame */}
+          <mesh position={[0, 0.2, -0.02]}>
+            <boxGeometry args={[1.65, 0.95, 0.04]} />
+            <meshStandardMaterial color="#1f2937" roughness={0.8} />
+          </mesh>
+          {/* Stand Pole */}
+          <mesh position={[0, -0.3, -0.05]}>
+            <boxGeometry args={[0.1, 0.2, 0.05]} />
+            <meshStandardMaterial color="#374151" />
+          </mesh>
+          {/* Stand Base */}
+          <mesh position={[0, -0.4, -0.05]}>
+            <boxGeometry args={[0.6, 0.02, 0.3]} />
+            <meshStandardMaterial color="#374151" />
+          </mesh>
+        </group>
+      );
+
+    case "painting":
+      return (
+        <group position={[0, 0, 0.48]}>
+          {/* Frame */}
+          <mesh position={[0, 0, 0]}>
+            <boxGeometry args={[1.2, 0.8, 0.06]} />
+            <meshStandardMaterial color="#78350f" roughness={0.7} />
+          </mesh>
+          {/* Canvas */}
+          <mesh position={[0, 0, 0.035]}>
+            <boxGeometry args={[1.1, 0.7, 0.01]} />
+            <meshStandardMaterial color={color || "#38bdf8"} roughness={0.9} />
+          </mesh>
+        </group>
+      );
+
     default: // "cube"
       return (
         <mesh>
