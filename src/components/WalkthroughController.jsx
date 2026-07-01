@@ -6,6 +6,11 @@ import * as THREE from "three";
 export default function WalkthroughController({ state, dispatch }) {
   const { camera, scene, raycaster } = useThree();
   const plcRef = useRef();
+  const confirmedCubesRef = useRef(state.confirmedCubes);
+  const draftCubesRef = useRef(state.draftCubes);
+  const currentMaterialRef = useRef(state.currentMaterial);
+  const currentShapeRef = useRef(state.currentShape);
+  const rotationYRef = useRef(state.rotationY);
 
   // Keyboard state
   const keys = useRef({
@@ -26,6 +31,26 @@ export default function WalkthroughController({ state, dispatch }) {
   const eyeHeight = 1.6;
   const playerHeight = 1.8;
   const playerRadius = 0.3;
+
+  useEffect(() => {
+    confirmedCubesRef.current = state.confirmedCubes;
+  }, [state.confirmedCubes]);
+
+  useEffect(() => {
+    draftCubesRef.current = state.draftCubes;
+  }, [state.draftCubes]);
+
+  useEffect(() => {
+    currentMaterialRef.current = state.currentMaterial;
+  }, [state.currentMaterial]);
+
+  useEffect(() => {
+    currentShapeRef.current = state.currentShape;
+  }, [state.currentShape]);
+
+  useEffect(() => {
+    rotationYRef.current = state.rotationY;
+  }, [state.rotationY]);
 
   // Listen to keyboard keys
   useEffect(() => {
@@ -93,7 +118,7 @@ export default function WalkthroughController({ state, dispatch }) {
     let startZ = 4;
     let startY = eyeHeight;
 
-    const cubes = [...state.confirmedCubes, ...state.draftCubes];
+    const cubes = [...confirmedCubesRef.current, ...draftCubesRef.current];
     if (cubes.length > 0) {
       let minX = Infinity, maxX = -Infinity;
       let minZ = Infinity, maxZ = -Infinity;
@@ -125,7 +150,7 @@ export default function WalkthroughController({ state, dispatch }) {
       camera.position.copy(originalPos);
       camera.rotation.copy(originalRotation);
     };
-  }, [camera, state.confirmedCubes, state.draftCubes]);
+  }, [camera]);
 
   // Click handler to interact with doors/windows and edit blocks
   useEffect(() => {
@@ -176,9 +201,9 @@ export default function WalkthroughController({ state, dispatch }) {
               x: newPos[0],
               y: newPos[1],
               z: newPos[2],
-              material: state.currentMaterial,
-              shape: state.currentShape || "cube",
-              rotationY: state.rotationY || 0
+              material: currentMaterialRef.current,
+              shape: currentShapeRef.current || "cube",
+              rotationY: rotationYRef.current || 0
             }
           });
           dispatch({ type: "CONFIRM_DRAFT" });
@@ -186,7 +211,9 @@ export default function WalkthroughController({ state, dispatch }) {
 
         // Middle Click: Pick up block material/shape
         if (e.button === 1) {
-          const cube = state.confirmedCubes.find(c => c.id === hit.cubeId) || state.draftCubes.find(c => c.id === hit.cubeId);
+          const cube =
+            confirmedCubesRef.current.find((c) => c.id === hit.cubeId) ||
+            draftCubesRef.current.find((c) => c.id === hit.cubeId);
           if (cube) {
             dispatch({ type: "SET_MATERIAL", payload: cube.material });
             dispatch({ type: "SET_SHAPE", payload: cube.shape });
@@ -203,7 +230,7 @@ export default function WalkthroughController({ state, dispatch }) {
 
     window.addEventListener("mousedown", handleClick);
     return () => window.removeEventListener("mousedown", handleClick);
-  }, [camera, scene, raycaster, dispatch, state.currentMaterial, state.currentShape, state.rotationY, state.confirmedCubes, state.draftCubes]);
+  }, [camera, scene, raycaster, dispatch]);
 
   // Helper functions for collision
   const getShapeTopY = (cube) => {
