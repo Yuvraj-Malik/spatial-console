@@ -15,6 +15,7 @@ export default function CubeManager({ dispatch, state }) {
   const [heightOffset, setHeightOffset] = useState(0);
   const activeRotation = state.rotationY || 0;
   const walkthroughActive = state.viewSettings?.walkthroughActive || false;
+  const placementActive = state.viewSettings?.placementActive !== false;
   const unstableIdSet = useMemo(
     () => new Set(state.collapseState.unstableIds),
     [state.collapseState.unstableIds],
@@ -43,6 +44,10 @@ export default function CubeManager({ dispatch, state }) {
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
         setLineStart(null);
+        dispatch({
+          type: "SET_PLACEMENT_ACTIVE",
+          payload: { active: false },
+        });
         return;
       }
       
@@ -53,10 +58,10 @@ export default function CubeManager({ dispatch, state }) {
 
       if (!lineStart) return;
 
-      if (e.key === "ArrowUp" || e.key.toLowerCase() === "w") {
+      if (e.key === "ArrowUp") {
         e.preventDefault();
         setHeightOffset((prev) => prev + 1);
-      } else if (e.key === "ArrowDown" || e.key.toLowerCase() === "s") {
+      } else if (e.key === "ArrowDown") {
         e.preventDefault();
         setHeightOffset((prev) => prev - 1);
       }
@@ -80,9 +85,10 @@ export default function CubeManager({ dispatch, state }) {
 
   const handleHover = useCallback(
     (position) => {
+      if (!placementActive) return;
       updateGhostPosition(position);
     },
-    [updateGhostPosition],
+    [placementActive, updateGhostPosition],
   );
 
   const handlePlace = useCallback((position) => {
@@ -185,6 +191,10 @@ export default function CubeManager({ dispatch, state }) {
   );
 
   const handleInteract = useCallback((position) => {
+    if (!placementActive) {
+      return;
+    }
+
     if (toolMode === "line") {
       if (!lineStart) {
         setLineStart(position);
@@ -195,12 +205,13 @@ export default function CubeManager({ dispatch, state }) {
     } else {
       handlePlace(position);
     }
-  }, [ghostPath, handlePlace, handlePlaceLine, lineStart, toolMode]);
+  }, [ghostPath, handlePlace, handlePlaceLine, lineStart, placementActive, toolMode]);
 
   const handleGroundPointerMove = useCallback((e) => {
+    if (!placementActive) return;
     const point = e.point;
     updateGhostPosition([Math.round(point.x), 0.5, Math.round(point.z)]);
-  }, [updateGhostPosition]);
+  }, [placementActive, updateGhostPosition]);
 
   return (
     <>
@@ -298,7 +309,7 @@ export default function CubeManager({ dispatch, state }) {
       ))}
 
       {/* Ghost cubes for preview */}
-      {!walkthroughActive && ghostPath.map((pos, idx) => (
+      {!walkthroughActive && placementActive && ghostPath.map((pos, idx) => (
         <GhostCube
           key={`${pos[0]}-${pos[1]}-${pos[2]}-${idx}`}
           position={pos}

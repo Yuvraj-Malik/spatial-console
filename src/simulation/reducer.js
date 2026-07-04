@@ -25,6 +25,7 @@ export const initialState = {
         walkthroughActive: false, // NEW: Walkthrough view mode active
         toolMode: "single", // "single" or "line"
         lightsOn: true, // NEW: Lighting toggle
+        placementActive: true, // NEW: Whether placement/ghost preview is enabled
     },
     sidebarOpen: false, // NEW: Sidebar visibility
 
@@ -94,14 +95,32 @@ export function simulationReducer(state, action) {
         case "SET_MATERIAL": {
             return {
                 ...state,
-                currentMaterial: action.payload
+                currentMaterial: action.payload,
+                viewSettings: {
+                    ...state.viewSettings,
+                    placementActive: true
+                }
             };
         }
 
         case "SET_SHAPE": {
             return {
                 ...state,
-                currentShape: action.payload
+                currentShape: action.payload,
+                viewSettings: {
+                    ...state.viewSettings,
+                    placementActive: true
+                }
+            };
+        }
+
+        case "SET_PLACEMENT_ACTIVE": {
+            return {
+                ...state,
+                viewSettings: {
+                    ...state.viewSettings,
+                    placementActive: action.payload.active
+                }
             };
         }
 

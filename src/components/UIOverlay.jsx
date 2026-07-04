@@ -512,9 +512,11 @@ export default function UIOverlay({
                   <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
                     <span className="font-semibold text-slate-200 block mb-1">Keyboard Shortcuts:</span>
                     <div className="space-y-1 font-mono text-[10px]">
+                      <div>W A S D: Move camera</div>
                       <div>R Key: Cycle rotation 90°</div>
                       <div>Ctrl + Z: Undo action</div>
-                      <div>Esc: Cancel drawing</div>
+                      <div>Esc: Free-hand mode (hide ghost)</div>
+                      <div>Arrow Up / Down: Adjust line height</div>
                     </div>
                   </div>
 
