@@ -18,6 +18,8 @@ export default function SceneCanvas({
 
   return (
     <Canvas
+      dpr={[1, 1.5]}
+      gl={{ antialias: false, powerPreference: "high-performance" }}
       camera={{
         position: initialCameraPosition,
         fov: 50,

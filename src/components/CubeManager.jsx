@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { getMaterialColor } from "../simulation/materials.js";
 import {
   dispatchAction,
@@ -7,6 +7,7 @@ import {
 } from "../controllers/actionController.js";
 import Cube from "./Cube";
 import GhostCube from "./GhostCube";
+import CubeInstances from "./CubeInstances";
 
 export default function CubeManager({ dispatch, state }) {
   const [ghostPosition, setGhostPosition] = useState([0, 0.5, 0]);
@@ -14,6 +15,14 @@ export default function CubeManager({ dispatch, state }) {
   const [heightOffset, setHeightOffset] = useState(0);
   const activeRotation = state.rotationY || 0;
   const walkthroughActive = state.viewSettings?.walkthroughActive || false;
+  const unstableIdSet = useMemo(
+    () => new Set(state.collapseState.unstableIds),
+    [state.collapseState.unstableIds],
+  );
+  const openInteractiveIdSet = useMemo(
+    () => new Set(state.openInteractiveIds || []),
+    [state.openInteractiveIds],
+  );
 
   // Reset line start when tool mode changes
   const toolMode = state.viewSettings?.toolMode || "single";
@@ -56,11 +65,27 @@ export default function CubeManager({ dispatch, state }) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [lineStart]);
 
-  const handleHover = (position) => {
-    setGhostPosition(position);
-  };
+  const updateGhostPosition = useCallback((position) => {
+    setGhostPosition((prev) => {
+      if (
+        prev[0] === position[0] &&
+        prev[1] === position[1] &&
+        prev[2] === position[2]
+      ) {
+        return prev;
+      }
+      return position;
+    });
+  }, []);
 
-  const handlePlace = (position) => {
+  const handleHover = useCallback(
+    (position) => {
+      updateGhostPosition(position);
+    },
+    [updateGhostPosition],
+  );
+
+  const handlePlace = useCallback((position) => {
     const action = {
       type: "PLACE_DRAFT",
       payload: {
@@ -73,9 +98,9 @@ export default function CubeManager({ dispatch, state }) {
       }
     };
     dispatchAction(dispatch, action.type, action.payload);
-  };
+  }, [activeRotation, dispatch, state.currentMaterial, state.currentShape]);
 
-  const handlePlaceLine = (positions) => {
+  const handlePlaceLine = useCallback((positions) => {
     const cubes = positions.map(pos => ({
       x: pos[0],
       y: pos[1],
@@ -88,12 +113,12 @@ export default function CubeManager({ dispatch, state }) {
       type: "PLACE_LINE_DRAFT",
       payload: { cubes }
     });
-  };
+  }, [activeRotation, dispatch, state.currentMaterial, state.currentShape]);
 
-  const handleDelete = (cubeId, status) => {
+  const handleDelete = useCallback((cubeId, status) => {
     const action = createDeleteAction(cubeId, status);
     dispatchAction(dispatch, action.type, action.payload);
-  };
+  }, [dispatch]);
 
   // Calculate coordinates along snapped dominant axis path for line tool preview
   const getGhostPath = () => {
@@ -140,9 +165,26 @@ export default function CubeManager({ dispatch, state }) {
     return path;
   };
 
-  const ghostPath = getGhostPath();
+  const ghostPath = useMemo(() => getGhostPath(), [toolMode, lineStart, ghostPosition, heightOffset]);
 
-  const handleInteract = (position) => {
+  const confirmedCubeBlocks = useMemo(
+    () => state.confirmedCubes.filter((cube) => (cube.shape || "cube") === "cube"),
+    [state.confirmedCubes],
+  );
+  const confirmedOtherShapes = useMemo(
+    () => state.confirmedCubes.filter((cube) => (cube.shape || "cube") !== "cube"),
+    [state.confirmedCubes],
+  );
+  const draftCubeBlocks = useMemo(
+    () => state.draftCubes.filter((cube) => (cube.shape || "cube") === "cube"),
+    [state.draftCubes],
+  );
+  const draftOtherShapes = useMemo(
+    () => state.draftCubes.filter((cube) => (cube.shape || "cube") !== "cube"),
+    [state.draftCubes],
+  );
+
+  const handleInteract = useCallback((position) => {
     if (toolMode === "line") {
       if (!lineStart) {
         setLineStart(position);
@@ -153,7 +195,12 @@ export default function CubeManager({ dispatch, state }) {
     } else {
       handlePlace(position);
     }
-  };
+  }, [ghostPath, handlePlace, handlePlaceLine, lineStart, toolMode]);
+
+  const handleGroundPointerMove = useCallback((e) => {
+    const point = e.point;
+    updateGhostPosition([Math.round(point.x), 0.5, Math.round(point.z)]);
+  }, [updateGhostPosition]);
 
   return (
     <>
@@ -162,10 +209,7 @@ export default function CubeManager({ dispatch, state }) {
         <mesh
           rotation={[-Math.PI / 2, 0, 0]}
           position={[0, 0, 0]}
-          onPointerMove={(e) => {
-            const point = e.point;
-            setGhostPosition([Math.round(point.x), 0.5, Math.round(point.z)]);
-          }}
+          onPointerMove={handleGroundPointerMove}
           onPointerDown={(e) => {
             e.stopPropagation();
             if (e.button === 0) {
@@ -201,32 +245,53 @@ export default function CubeManager({ dispatch, state }) {
         </mesh>
       )}
 
-      {/* Render confirmed cubes */}
-      {state.confirmedCubes.map((cube) => (
+      {/* Fast path for standard cube blocks */}
+      <CubeInstances
+        cubes={confirmedCubeBlocks}
+        onHover={handleHover}
+        onPlace={handleInteract}
+        onDelete={handleDelete}
+        stressHeatmapEnabled={state.viewSettings?.stressHeatmap}
+        unstableIdSet={unstableIdSet}
+        stressById={state.structuralMetrics?.stresses}
+        walkthroughActive={walkthroughActive}
+        lightsOn={state.viewSettings?.lightsOn !== false}
+      />
+      <CubeInstances
+        cubes={draftCubeBlocks}
+        isDraft
+        onHover={handleHover}
+        onPlace={handleInteract}
+        onDelete={handleDelete}
+        walkthroughActive={walkthroughActive}
+        lightsOn={state.viewSettings?.lightsOn !== false}
+      />
+
+      {/* Render non-cube shapes with per-mesh components */}
+      {confirmedOtherShapes.map((cube) => (
         <Cube
           key={cube.id}
           cube={cube}
           onHover={handleHover}
           onPlace={handleInteract}
-          onDelete={() => handleDelete(cube.id, cube.status)}
-          isUnstable={state.collapseState.unstableIds.includes(cube.id)}
+          onDelete={handleDelete}
+          isUnstable={unstableIdSet.has(cube.id)}
           stressHeatmapEnabled={state.viewSettings?.stressHeatmap}
           stressRatio={state.structuralMetrics?.stresses?.[cube.id]?.stressRatio || 0}
-          isOpen={state.openInteractiveIds?.includes(cube.id)}
+          isOpen={openInteractiveIdSet.has(cube.id)}
           walkthroughActive={walkthroughActive}
           lightsOn={state.viewSettings?.lightsOn !== false}
         />
       ))}
 
-      {/* Render draft cubes */}
-      {state.draftCubes.map((cube) => (
+      {draftOtherShapes.map((cube) => (
         <Cube
           key={cube.id}
           cube={cube}
           onHover={handleHover}
           onPlace={handleInteract}
-          onDelete={() => handleDelete(cube.id, cube.status)}
-          isOpen={state.openInteractiveIds?.includes(cube.id)}
+          onDelete={handleDelete}
+          isOpen={openInteractiveIdSet.has(cube.id)}
           walkthroughActive={walkthroughActive}
           lightsOn={state.viewSettings?.lightsOn !== false}
         />

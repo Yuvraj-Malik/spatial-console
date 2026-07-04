@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { memo, useState } from "react";
 import {
   getMaterialColor,
   getMaterialEmissive,
 } from "../simulation/materials.js";
 import { renderShapeGeometry } from "./ShapeRenderer.jsx";
 
-export default function Cube({
+function Cube({
   cube,
   onHover,
   onPlace,
@@ -79,7 +79,7 @@ export default function Cube({
 
         if (e.button === 2) {
           if (window.__gestureRotateActive) return;
-          onDelete();
+          onDelete(cube.id, cube.status);
         }
       }}
     >
@@ -87,3 +87,20 @@ export default function Cube({
     </group>
   );
 }
+
+function areCubePropsEqual(prev, next) {
+  return (
+    prev.cube === next.cube &&
+    prev.isUnstable === next.isUnstable &&
+    prev.stressHeatmapEnabled === next.stressHeatmapEnabled &&
+    prev.stressRatio === next.stressRatio &&
+    prev.isOpen === next.isOpen &&
+    prev.walkthroughActive === next.walkthroughActive &&
+    prev.lightsOn === next.lightsOn &&
+    prev.onHover === next.onHover &&
+    prev.onPlace === next.onPlace &&
+    prev.onDelete === next.onDelete
+  );
+}
+
+export default memo(Cube, areCubePropsEqual);
