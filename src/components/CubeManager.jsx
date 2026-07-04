@@ -268,15 +268,6 @@ export default function CubeManager({ dispatch, state }) {
         walkthroughActive={walkthroughActive}
         lightsOn={state.viewSettings?.lightsOn !== false}
       />
-      <CubeInstances
-        cubes={draftCubeBlocks}
-        isDraft
-        onHover={handleHover}
-        onPlace={handleInteract}
-        onDelete={handleDelete}
-        walkthroughActive={walkthroughActive}
-        lightsOn={state.viewSettings?.lightsOn !== false}
-      />
 
       {/* Render non-cube shapes with per-mesh components */}
       {confirmedOtherShapes.map((cube) => (
@@ -290,6 +281,18 @@ export default function CubeManager({ dispatch, state }) {
           stressHeatmapEnabled={state.viewSettings?.stressHeatmap}
           stressRatio={state.structuralMetrics?.stresses?.[cube.id]?.stressRatio || 0}
           isOpen={openInteractiveIdSet.has(cube.id)}
+          walkthroughActive={walkthroughActive}
+          lightsOn={state.viewSettings?.lightsOn !== false}
+        />
+      ))}
+
+      {draftCubeBlocks.map((cube) => (
+        <Cube
+          key={cube.id}
+          cube={cube}
+          onHover={handleHover}
+          onPlace={handleInteract}
+          onDelete={handleDelete}
           walkthroughActive={walkthroughActive}
           lightsOn={state.viewSettings?.lightsOn !== false}
         />

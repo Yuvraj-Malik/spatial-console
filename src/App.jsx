@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer, useRef } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import SceneCanvas from "./components/SceneCanvas";
 import UIOverlay from "./components/UIOverlay";
 import GestureOverlay from "./components/GestureOverlay";
@@ -7,7 +7,7 @@ import { auth, getLocalUser, loadStructureById, firebaseEnabled } from "./core/f
 import { onAuthStateChanged } from "firebase/auth";
 
 // Virtual Cursor Component
-function VirtualCursor() {
+function VirtualCursor({ visible }) {
   return (
     <div
       id="virtual-cursor"
@@ -20,6 +20,7 @@ function VirtualCursor() {
         pointerEvents: "none",
         transform: "translate(-50%, -50%)",
         zIndex: 9999,
+        display: visible ? "block" : "none",
       }}
     />
   );
@@ -27,8 +28,8 @@ function VirtualCursor() {
 
 export default function App() {
   const [state, dispatch] = useReducer(simulationReducer, initialState);
+  const [gestureMode, setGestureMode] = useState(false);
   const gestureCursorPos = { x: 0, y: 0.5, z: 0 };
-  const gestureMode = false;
   const gestureControllerRef = useRef(null);
 
   // Listen to Auth State Changes
@@ -127,7 +128,7 @@ export default function App() {
   return (
     <div style={{ width: "100vw", height: "100vh", background: "#05070d" }}>
       {/* Virtual Cursor */}
-      <VirtualCursor />
+      <VirtualCursor visible={gestureMode} />
 
       <SceneCanvas
         dispatch={dispatch}
@@ -145,6 +146,7 @@ export default function App() {
       <GestureOverlay
         gestureControllerRef={gestureControllerRef}
         onGestureAction={handleGestureAction}
+        onGestureModeChange={setGestureMode}
       />
     </div>
   );

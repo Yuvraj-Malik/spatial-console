@@ -21,21 +21,35 @@ function getCubeColor({ cube, isConfirmed, stressHeatmapEnabled, unstableIdSet, 
 }
 
 function getSnappedFaceNormal(point, cube) {
-  const dx = point.x - cube.x;
-  const dy = point.y - cube.y;
-  const dz = point.z - cube.z;
+  const localX = point.x - cube.x;
+  const localY = point.y - cube.y;
+  const localZ = point.z - cube.z;
 
-  const absX = Math.abs(dx);
-  const absY = Math.abs(dy);
-  const absZ = Math.abs(dz);
+  const faceDistances = [
+    { normal: [1, 0, 0], distance: Math.abs(0.5 - localX) },
+    { normal: [-1, 0, 0], distance: Math.abs(-0.5 - localX) },
+    { normal: [0, 1, 0], distance: Math.abs(0.5 - localY) },
+    { normal: [0, -1, 0], distance: Math.abs(-0.5 - localY) },
+    { normal: [0, 0, 1], distance: Math.abs(0.5 - localZ) },
+    { normal: [0, 0, -1], distance: Math.abs(-0.5 - localZ) },
+  ];
 
-  if (absX >= absY && absX >= absZ) {
-    return [Math.sign(dx) || 1, 0, 0];
+  faceDistances.sort((a, b) => a.distance - b.distance);
+  return faceDistances[0].normal;
+}
+
+function getInteractionNormal(event, cube) {
+  const faceNormal = event.face?.normal;
+
+  if (faceNormal) {
+    return [
+      Math.round(faceNormal.x),
+      Math.round(faceNormal.y),
+      Math.round(faceNormal.z),
+    ];
   }
-  if (absY >= absX && absY >= absZ) {
-    return [0, Math.sign(dy) || 1, 0];
-  }
-  return [0, 0, Math.sign(dz) || 1];
+
+  return getSnappedFaceNormal(event.point, cube);
 }
 
 export default function CubeInstances({
@@ -137,7 +151,7 @@ const CubeInstanceBatch = memo(function CubeInstanceBatch({
         const cube = cubes[e.instanceId];
         if (!cube) return;
 
-        const normal = getSnappedFaceNormal(e.point, cube);
+        const normal = getInteractionNormal(e, cube);
         onHover([cube.x + normal[0], cube.y + normal[1], cube.z + normal[2]]);
       }}
       onPointerDown={(e) => {
@@ -148,7 +162,7 @@ const CubeInstanceBatch = memo(function CubeInstanceBatch({
         if (!cube) return;
 
         if (e.button === 0) {
-          const normal = getSnappedFaceNormal(e.point, cube);
+          const normal = getInteractionNormal(e, cube);
           onPlace([cube.x + normal[0], cube.y + normal[1], cube.z + normal[2]]);
         }
 

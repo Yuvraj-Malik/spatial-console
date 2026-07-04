@@ -205,10 +205,10 @@ export function calculateStructuralMetrics(confirmedCubes) {
     totalMass,
     totalCost,
     maxHeight: displayMaxHeight,
-    safetyFactor: Infinity,
+    safetyFactor,
     centerOfMass,
-    stresses: {},
-    unstableIds: [],
+    stresses,
+    unstableIds,
   };
 }
 

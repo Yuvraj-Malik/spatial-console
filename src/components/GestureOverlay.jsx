@@ -56,6 +56,7 @@ function drawHandLandmarks(ctx, landmarks, width, height) {
 export default function GestureOverlay({
   gestureControllerRef,
   onGestureAction,
+  onGestureModeChange,
 }) {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -72,6 +73,12 @@ export default function GestureOverlay({
   useEffect(() => {
     gestureActionRef.current = onGestureAction;
   }, [onGestureAction]);
+
+  useEffect(() => {
+    if (onGestureModeChange) {
+      onGestureModeChange(isActive);
+    }
+  }, [isActive, onGestureModeChange]);
 
   useEffect(() => {
     const initialize = async () => {
@@ -148,6 +155,9 @@ export default function GestureOverlay({
     initialize();
 
     return () => {
+      if (onGestureModeChange) {
+        onGestureModeChange(false);
+      }
       if (cameraRef.current) {
         cameraRef.current.stop();
       }
@@ -159,7 +169,7 @@ export default function GestureOverlay({
       controllerRef.current = null;
       gestureControllerRef.current = null;
     };
-  }, [gestureControllerRef]);
+  }, [gestureControllerRef, onGestureModeChange]);
 
   const toggleGestureMode = async () => {
     if (!isInitialized || !cameraRef.current) return;

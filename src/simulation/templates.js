@@ -1,4 +1,4 @@
-import { MATERIALS } from "./materials";
+import { MATERIALS } from "./materials.js";
 
 export const TEMPLATES = {
   // ─────────────────────────────────────────────────────────────────

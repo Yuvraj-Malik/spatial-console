@@ -1,6 +1,50 @@
 import { DEFAULT_MATERIAL } from './materials.js';
 import { calculateStructuralMetrics } from './structuralEngine.js';
 
+function createCollapseState(metrics, warningActive = metrics.unstableIds.length > 0) {
+    return {
+        warningActive,
+        unstableIds: metrics.unstableIds,
+        countdown: 3
+    };
+}
+
+function resolveCascadeCollapse(cubes) {
+    let remaining = [...cubes];
+    let collapsedCubes = [];
+
+    while (remaining.length > 0) {
+        const metrics = calculateStructuralMetrics(remaining);
+        if (metrics.unstableIds.length === 0) {
+            return {
+                stableCubes: remaining,
+                collapsedCubes,
+                metrics,
+            };
+        }
+
+        const unstableSet = new Set(metrics.unstableIds);
+        const nextCollapsed = remaining.filter((cube) => unstableSet.has(cube.id));
+
+        if (nextCollapsed.length === 0) {
+            return {
+                stableCubes: remaining,
+                collapsedCubes,
+                metrics,
+            };
+        }
+
+        collapsedCubes = [...collapsedCubes, ...nextCollapsed];
+        remaining = remaining.filter((cube) => !unstableSet.has(cube.id));
+    }
+
+    return {
+        stableCubes: [],
+        collapsedCubes,
+        metrics: calculateStructuralMetrics([]),
+    };
+}
+
 // ---- Initial State ----
 export const initialState = {
     draftCubes: [],
@@ -160,11 +204,7 @@ export function simulationReducer(state, action) {
                         previousMetrics: state.structuralMetrics 
                     }
                 ],
-                collapseState: {
-                    warningActive: metrics.unstableIds.length > 0,
-                    unstableIds: metrics.unstableIds,
-                    countdown: metrics.unstableIds.length > 0 ? 3 : 3
-                }
+                collapseState: createCollapseState(metrics, false)
             };
         }
 
@@ -214,11 +254,7 @@ export function simulationReducer(state, action) {
                     draftCubes: recentlyConfirmed.map(cube => ({ ...cube, status: "draft" })),
                     structuralMetrics: metrics,
                     history: newHistory,
-                    collapseState: {
-                        warningActive: false,
-                        unstableIds: [],
-                        countdown: 3
-                    }
+                    collapseState: createCollapseState(metrics, false)
                 };
             }
 
@@ -230,11 +266,7 @@ export function simulationReducer(state, action) {
                     confirmedCubes: restoredConfirmed,
                     structuralMetrics: metrics,
                     history: newHistory,
-                    collapseState: {
-                        warningActive: false,
-                        unstableIds: [],
-                        countdown: 3
-                    }
+                    collapseState: createCollapseState(metrics, false)
                 };
             }
 
@@ -246,11 +278,7 @@ export function simulationReducer(state, action) {
                     confirmedCubes: restoredConfirmed,
                     structuralMetrics: metrics,
                     history: newHistory,
-                    collapseState: {
-                        warningActive: false,
-                        unstableIds: [],
-                        countdown: 3
-                    }
+                    collapseState: createCollapseState(metrics, false)
                 };
             }
 
@@ -277,32 +305,36 @@ export function simulationReducer(state, action) {
                         previousMetrics: state.structuralMetrics
                     }
                 ],
-                collapseState: {
-                    warningActive: metrics.unstableIds.length > 0,
-                    unstableIds: metrics.unstableIds,
-                    countdown: metrics.unstableIds.length > 0 ? 3 : 3
-                }
+                collapseState: createCollapseState(metrics, false)
+            };
+        }
+
+        case "RUN_STRUCTURAL_SIMULATION": {
+            if (state.structuralMetrics.unstableIds.length === 0) {
+                return {
+                    ...state,
+                    collapseState: createCollapseState(state.structuralMetrics, false)
+                };
+            }
+
+            return {
+                ...state,
+                collapseState: createCollapseState(state.structuralMetrics, true)
             };
         }
 
         case "COLLAPSE": {
-            const collapsedCubes = state.confirmedCubes.filter(
-                cube => state.collapseState.unstableIds.includes(cube.id)
-            );
-            const stableCubes = state.confirmedCubes.filter(
-                cube => !state.collapseState.unstableIds.includes(cube.id)
-            );
-            const metrics = calculateStructuralMetrics(stableCubes);
+            const {
+                stableCubes,
+                collapsedCubes,
+                metrics,
+            } = resolveCascadeCollapse(state.confirmedCubes);
 
             return {
                 ...state,
                 confirmedCubes: stableCubes,
                 structuralMetrics: metrics,
-                collapseState: {
-                    warningActive: false,
-                    unstableIds: [],
-                    countdown: 3
-                },
+                collapseState: createCollapseState(metrics, false),
                 history: [
                     ...state.history,
                     {
@@ -421,11 +453,8 @@ export function simulationReducer(state, action) {
                 nextId: state.nextId + templateCubes.length,
                 structuralMetrics: metrics,
                 history: [], // Reset history on template load
-                collapseState: {
-                    warningActive: false,
-                    unstableIds: [],
-                    countdown: 3
-                }
+                openInteractiveIds: [],
+                collapseState: createCollapseState(metrics, false)
             };
         }
 
@@ -444,11 +473,8 @@ export function simulationReducer(state, action) {
                 nextId: state.nextId + importedCubes.length,
                 structuralMetrics: metrics,
                 history: [],
-                collapseState: {
-                    warningActive: false,
-                    unstableIds: [],
-                    countdown: 3
-                }
+                openInteractiveIds: [],
+                collapseState: createCollapseState(metrics, false)
             };
         }
 

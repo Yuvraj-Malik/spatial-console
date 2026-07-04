@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   MATERIALS,
   COLOR_PALETTE,
@@ -15,6 +15,7 @@ import {
   registerUserWithEmail,
   loginUserWithEmail,
 } from "../core/firebase.js";
+import { calculateStructuralMetrics } from "../simulation/structuralEngine.js";
 
 const SHAPE_CATEGORIES = [
   {
@@ -124,6 +125,25 @@ export default function UIOverlay({
   const draftCount = draftCubes.length;
   const confirmedCount = confirmedCubes.length;
   const totalCount = draftCount + confirmedCount;
+  const stressEntries = Object.values(structuralMetrics?.stresses || {});
+  const overstressedCount = stressEntries.filter((entry) => entry.stressRatio > 1).length;
+  const unstableCount = structuralMetrics?.unstableIds?.length || 0;
+  const disconnectedCount = Math.max(0, unstableCount - overstressedCount);
+  const canRunSimulation = confirmedCount > 0 && unstableCount > 0;
+  const templateDiagnostics = useMemo(() => {
+    return Object.fromEntries(
+      Object.entries(TEMPLATES).map(([key, template]) => {
+        const cubes = template.cubes.map((cube, index) => ({
+          id: index + 1,
+          status: "confirmed",
+          shape: cube.shape || "cube",
+          rotationY: cube.rotationY || 0,
+          ...cube,
+        }));
+        return [key, calculateStructuralMetrics(cubes)];
+      }),
+    );
+  }, []);
 
   // Formatting helpers
   const formatMass = (kg) => {
@@ -275,17 +295,29 @@ export default function UIOverlay({
   // Determine structural status
   let statusText = "Empty Scene";
   let statusColor = "bg-[#1c1e24] text-slate-400 border-[#2a2d34]";
+  let statusDetail = "Start placing and confirm blocks to analyze the structure.";
   
   if (totalCount > 0) {
-    if (collapseState.warningActive || (structuralMetrics?.unstableIds || []).length > 0) {
-      statusText = "COLLAPSE IMMINENT";
+    if (collapseState.warningActive) {
+      statusText = "COLLAPSE COUNTDOWN";
       statusColor = "bg-[#3b1111] text-[#f87171] border-[#6b1e1e]";
-    } else if (structuralMetrics.safetyFactor < 1.0) {
-      statusText = "STRUCTURE OVERLOADED";
+      statusDetail = `${collapseState.unstableIds.length} unstable voxel(s) will collapse unless you cancel.`;
+    } else if (disconnectedCount > 0 && overstressedCount > 0) {
+      statusText = "UNSUPPORTED + OVERLOADED";
+      statusColor = "bg-[#3b1111] text-[#f87171] border-[#6b1e1e]";
+      statusDetail = `${disconnectedCount} disconnected voxel(s) and ${overstressedCount} overstressed voxel(s) detected. Creative mode keeps them until you run simulation.`;
+    } else if (disconnectedCount > 0) {
+      statusText = "UNSUPPORTED STRUCTURE";
+      statusColor = "bg-[#3b1111] text-[#f87171] border-[#6b1e1e]";
+      statusDetail = `${disconnectedCount} voxel(s) are not connected to ground support. Creative mode keeps them until you run simulation.`;
+    } else if (overstressedCount > 0) {
+      statusText = "OVERLOADED STRUCTURE";
       statusColor = "bg-[#332211] text-[#fbbf24] border-[#5c3e17]";
+      statusDetail = `${overstressedCount} voxel(s) exceed material compression or bending limits. Creative mode keeps them until you run simulation.`;
     } else {
       statusText = "STRUCTURALLY SOUND";
       statusColor = "bg-[#132c1f] text-[#4ade80] border-[#1f5135]";
+      statusDetail = "All confirmed voxels are grounded and within the current solver limits.";
     }
   }
 
@@ -455,6 +487,9 @@ export default function UIOverlay({
             </div>
           </div>
         </div>
+        <div className="px-4 py-2 border-b border-[#2a2d34] text-[10px] text-slate-500 leading-relaxed">
+          {statusDetail}
+        </div>
 
         {/* Tab Segment Controls */}
         <div className="p-1 bg-[#121316] border-b border-[#2a2d34] flex gap-1 text-[10px]">
@@ -522,6 +557,7 @@ export default function UIOverlay({
 
                   <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded">
                     <span className="font-semibold text-slate-200 block mb-1">Gesture Commands:</span>
+                    <div className="text-[9px] text-slate-500 italic mb-1.5">Available when gestures are enabled from the camera panel.</div>
                     <div className="space-y-1 font-mono text-[10px]">
                       <div>Point finger: Move cursor</div>
                       <div>Pinch fingers: Place block</div>
@@ -753,6 +789,30 @@ export default function UIOverlay({
           {/* TAB 2: TELEMETRY */}
           {activeTab === "telemetry" && (
             <div className="space-y-4">
+              <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-[10px] font-semibold uppercase tracking-wider text-slate-300">Creative Build Mode</h3>
+                    <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                      Confirming blocks never destroys them automatically. Analysis stays live, and failure simulation only runs when you trigger it.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => dispatch({ type: "RUN_STRUCTURAL_SIMULATION" })}
+                    disabled={!canRunSimulation}
+                    className={`px-3 py-2 rounded text-[10px] font-semibold border transition-all cursor-pointer whitespace-nowrap ${
+                      canRunSimulation
+                        ? "bg-red-950/30 border-red-500/40 text-red-300 hover:bg-red-900/40 hover:text-white"
+                        : "bg-[#121316] border-[#2a2d34] text-slate-600 cursor-not-allowed"
+                    }`}
+                  >
+                    Run Structural Simulation
+                  </button>
+                </div>
+                {!canRunSimulation && confirmedCount > 0 && unstableCount === 0 && (
+                  <p className="text-[9px] text-emerald-400">No unstable voxels detected. There is nothing to collapse right now.</p>
+                )}
+              </div>
               
               {/* Voxel Counts */}
               <div className="grid grid-cols-2 gap-3">
@@ -889,8 +949,24 @@ export default function UIOverlay({
                         className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded flex flex-col justify-between gap-2 transition-all hover:border-slate-500"
                       >
                         <div>
-                          <h4 className="font-semibold text-[11px] text-slate-200">{template.name}</h4>
+                          <div className="flex items-start justify-between gap-2">
+                            <h4 className="font-semibold text-[11px] text-slate-200">{template.name}</h4>
+                            {templateDiagnostics[key]?.unstableIds?.length > 0 ? (
+                              <span className="px-1.5 py-0.5 rounded border border-red-900/60 bg-red-950/30 text-[8px] font-semibold uppercase tracking-wider text-red-300 whitespace-nowrap">
+                                {templateDiagnostics[key].unstableIds.length} unstable
+                              </span>
+                            ) : (
+                              <span className="px-1.5 py-0.5 rounded border border-emerald-900/60 bg-emerald-950/30 text-[8px] font-semibold uppercase tracking-wider text-emerald-300 whitespace-nowrap">
+                                Solver stable
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{template.description}</p>
+                          <p className="text-[9px] text-slate-600 mt-1 leading-relaxed">
+                            {templateDiagnostics[key]?.unstableIds?.length > 0
+                              ? "Current solver predicts unsupported or overloaded voxels in this blueprint."
+                              : "Current solver finds no unsupported or overloaded voxels in this blueprint."}
+                          </p>
                         </div>
                         <button
                           onClick={() => dispatch({ type: "LOAD_TEMPLATE", payload: { cubes: template.cubes } })}
@@ -1270,7 +1346,7 @@ export default function UIOverlay({
                 : "bg-[#121316] hover:bg-[#1a1c20] border border-[#38bdf8] text-[#38bdf8] hover:text-white"
             }`}
           >
-            Confirm Structure ({draftCount})
+            Confirm Build ({draftCount})
           </button>
 
           <div className="grid grid-cols-2 gap-3">
