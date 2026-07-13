@@ -1,61 +1,12 @@
 import { DEFAULT_MATERIAL } from './materials.js';
 import { calculateStructuralMetrics } from './structuralEngine.js';
 
-function createCollapseState(metrics, warningActive = metrics.unstableIds.length > 0) {
-    return {
-        warningActive,
-        unstableIds: metrics.unstableIds,
-        countdown: 3
-    };
-}
-
-function resolveCascadeCollapse(cubes) {
-    let remaining = [...cubes];
-    let collapsedCubes = [];
-
-    while (remaining.length > 0) {
-        const metrics = calculateStructuralMetrics(remaining);
-        if (metrics.unstableIds.length === 0) {
-            return {
-                stableCubes: remaining,
-                collapsedCubes,
-                metrics,
-            };
-        }
-
-        const unstableSet = new Set(metrics.unstableIds);
-        const nextCollapsed = remaining.filter((cube) => unstableSet.has(cube.id));
-
-        if (nextCollapsed.length === 0) {
-            return {
-                stableCubes: remaining,
-                collapsedCubes,
-                metrics,
-            };
-        }
-
-        collapsedCubes = [...collapsedCubes, ...nextCollapsed];
-        remaining = remaining.filter((cube) => !unstableSet.has(cube.id));
-    }
-
-    return {
-        stableCubes: [],
-        collapsedCubes,
-        metrics: calculateStructuralMetrics([]),
-    };
-}
-
 // ---- Initial State ----
 export const initialState = {
     draftCubes: [],
     confirmedCubes: [],
     currentMaterial: DEFAULT_MATERIAL,
     history: [],
-    collapseState: {
-        warningActive: false,
-        unstableIds: [],
-        countdown: 3
-    },
     nextId: 1,
     user: null, // NEW: User Account State
     currentShape: "cube", // NEW: Active geometry shape
@@ -63,7 +14,6 @@ export const initialState = {
     openInteractiveIds: [], // NEW: Tracks open doors and windows
     // NEW: View settings
     viewSettings: {
-        stressHeatmap: false,
         showGrid: true,
         autoRotate: false,
         walkthroughActive: false, // NEW: Walkthrough view mode active
@@ -80,8 +30,7 @@ export const initialState = {
         maxHeight: 0,
         safetyFactor: Infinity,
         centerOfMass: { x: 0, y: 0, z: 0 },
-        stresses: {},
-        unstableIds: []
+        stresses: {}
     }
 };
 
@@ -203,8 +152,7 @@ export function simulationReducer(state, action) {
                         previousDraftCubes: state.draftCubes,
                         previousMetrics: state.structuralMetrics 
                     }
-                ],
-                collapseState: createCollapseState(metrics, false)
+                ]
             };
         }
 
@@ -253,8 +201,7 @@ export function simulationReducer(state, action) {
                     confirmedCubes: remainingConfirmed,
                     draftCubes: recentlyConfirmed.map(cube => ({ ...cube, status: "draft" })),
                     structuralMetrics: metrics,
-                    history: newHistory,
-                    collapseState: createCollapseState(metrics, false)
+                    history: newHistory
                 };
             }
 
@@ -265,20 +212,7 @@ export function simulationReducer(state, action) {
                     ...state,
                     confirmedCubes: restoredConfirmed,
                     structuralMetrics: metrics,
-                    history: newHistory,
-                    collapseState: createCollapseState(metrics, false)
-                };
-            }
-
-            if (lastAction.type === "COLLAPSE") {
-                const restoredConfirmed = [...state.confirmedCubes, ...lastAction.payload.collapsedCubes];
-                const metrics = calculateStructuralMetrics(restoredConfirmed);
-                return {
-                    ...state,
-                    confirmedCubes: restoredConfirmed,
-                    structuralMetrics: metrics,
-                    history: newHistory,
-                    collapseState: createCollapseState(metrics, false)
+                    history: newHistory
                 };
             }
 
@@ -304,79 +238,11 @@ export function simulationReducer(state, action) {
                         payload: deletedCube,
                         previousMetrics: state.structuralMetrics
                     }
-                ],
-                collapseState: createCollapseState(metrics, false)
-            };
-        }
-
-        case "RUN_STRUCTURAL_SIMULATION": {
-            if (state.structuralMetrics.unstableIds.length === 0) {
-                return {
-                    ...state,
-                    collapseState: createCollapseState(state.structuralMetrics, false)
-                };
-            }
-
-            return {
-                ...state,
-                collapseState: createCollapseState(state.structuralMetrics, true)
-            };
-        }
-
-        case "COLLAPSE": {
-            const {
-                stableCubes,
-                collapsedCubes,
-                metrics,
-            } = resolveCascadeCollapse(state.confirmedCubes);
-
-            return {
-                ...state,
-                confirmedCubes: stableCubes,
-                structuralMetrics: metrics,
-                collapseState: createCollapseState(metrics, false),
-                history: [
-                    ...state.history,
-                    {
-                        type: "COLLAPSE",
-                        payload: { collapsedCubes },
-                        previousMetrics: state.structuralMetrics
-                    }
                 ]
             };
         }
 
-        case "CANCEL_COLLAPSE": {
-            return {
-                ...state,
-                collapseState: {
-                    warningActive: false,
-                    unstableIds: [],
-                    countdown: 3
-                }
-            };
-        }
-
-        case "UPDATE_COUNTDOWN": {
-            return {
-                ...state,
-                collapseState: {
-                    ...state.collapseState,
-                    countdown: action.payload.countdown
-                }
-            };
-        }
-
         // NEW: View settings toggles
-        case "TOGGLE_STRESS_HEATMAP": {
-            return {
-                ...state,
-                viewSettings: {
-                    ...state.viewSettings,
-                    stressHeatmap: !state.viewSettings.stressHeatmap
-                }
-            };
-        }
 
         case "TOGGLE_GRID": {
             return {
@@ -453,8 +319,7 @@ export function simulationReducer(state, action) {
                 nextId: state.nextId + templateCubes.length,
                 structuralMetrics: metrics,
                 history: [], // Reset history on template load
-                openInteractiveIds: [],
-                collapseState: createCollapseState(metrics, false)
+                openInteractiveIds: []
             };
         }
 
@@ -473,8 +338,7 @@ export function simulationReducer(state, action) {
                 nextId: state.nextId + importedCubes.length,
                 structuralMetrics: metrics,
                 history: [],
-                openInteractiveIds: [],
-                collapseState: createCollapseState(metrics, false)
+                openInteractiveIds: []
             };
         }
 
@@ -486,11 +350,6 @@ export function simulationReducer(state, action) {
                 history: [],
                 openInteractiveIds: [],
                 structuralMetrics: calculateStructuralMetrics([]),
-                collapseState: {
-                    warningActive: false,
-                    unstableIds: [],
-                    countdown: 3
-                },
                 viewSettings: {
                     ...state.viewSettings,
                     walkthroughActive: false

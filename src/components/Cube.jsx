@@ -10,9 +10,6 @@ function Cube({
   onHover,
   onPlace,
   onDelete,
-  isUnstable = false,
-  stressHeatmapEnabled = false,
-  stressRatio = 0,
   isOpen = false,
   walkthroughActive = false,
   lightsOn = true,
@@ -28,21 +25,7 @@ function Cube({
      emissiveColor = undefined;
   }
 
-  if (status === "confirmed" && stressHeatmapEnabled) {
-    if (stressRatio > 1.0) {
-      cubeColor = "#ef4444"; // Pulsing/bright red for overloaded
-      emissiveColor = "#7f1d1d";
-    } else {
-      // HSL: 120 is green, 60 is yellow, 0 is red
-      const hue = Math.max(0, Math.min(120, (1 - stressRatio) * 120));
-      cubeColor = `hsl(${hue}, 85%, 45%)`;
-      emissiveColor = `hsl(${hue}, 85%, 20%)`;
-    }
-  } else if (isUnstable) {
-    // Pulsing red effect for unstable cubes
-    cubeColor = "#ef4444";
-    emissiveColor = hovered ? "#dc2626" : "#991b1b";
-  } else if (hovered && !walkthroughActive) {
+  if (hovered && !walkthroughActive) {
     emissiveColor = "#1d4ed8";
   }
 
@@ -91,9 +74,6 @@ function Cube({
 function areCubePropsEqual(prev, next) {
   return (
     prev.cube === next.cube &&
-    prev.isUnstable === next.isUnstable &&
-    prev.stressHeatmapEnabled === next.stressHeatmapEnabled &&
-    prev.stressRatio === next.stressRatio &&
     prev.isOpen === next.isOpen &&
     prev.walkthroughActive === next.walkthroughActive &&
     prev.lightsOn === next.lightsOn &&

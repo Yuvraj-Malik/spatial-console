@@ -86,24 +86,6 @@ export default function App() {
     }
   }, [dispatch]);
 
-  // Collapse countdown timer loop
-  useEffect(() => {
-    if (!state.collapseState.warningActive) return;
-
-    const timer = setInterval(() => {
-      if (state.collapseState.countdown > 1) {
-        dispatch({
-          type: "UPDATE_COUNTDOWN",
-          payload: { countdown: state.collapseState.countdown - 1 }
-        });
-      } else {
-        dispatch({ type: "COLLAPSE" });
-      }
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [state.collapseState.warningActive, state.collapseState.countdown]);
-
   // Keyboard shortcut listener (Ctrl+Z for Undo)
   useEffect(() => {
     const handleKeyDown = (e) => {

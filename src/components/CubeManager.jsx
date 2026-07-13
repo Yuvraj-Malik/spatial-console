@@ -16,10 +16,6 @@ export default function CubeManager({ dispatch, state }) {
   const activeRotation = state.rotationY || 0;
   const walkthroughActive = state.viewSettings?.walkthroughActive || false;
   const placementActive = state.viewSettings?.placementActive !== false;
-  const unstableIdSet = useMemo(
-    () => new Set(state.collapseState.unstableIds),
-    [state.collapseState.unstableIds],
-  );
   const openInteractiveIdSet = useMemo(
     () => new Set(state.openInteractiveIds || []),
     [state.openInteractiveIds],
@@ -262,9 +258,6 @@ export default function CubeManager({ dispatch, state }) {
         onHover={handleHover}
         onPlace={handleInteract}
         onDelete={handleDelete}
-        stressHeatmapEnabled={state.viewSettings?.stressHeatmap}
-        unstableIdSet={unstableIdSet}
-        stressById={state.structuralMetrics?.stresses}
         walkthroughActive={walkthroughActive}
         lightsOn={state.viewSettings?.lightsOn !== false}
       />
@@ -277,9 +270,6 @@ export default function CubeManager({ dispatch, state }) {
           onHover={handleHover}
           onPlace={handleInteract}
           onDelete={handleDelete}
-          isUnstable={unstableIdSet.has(cube.id)}
-          stressHeatmapEnabled={state.viewSettings?.stressHeatmap}
-          stressRatio={state.structuralMetrics?.stresses?.[cube.id]?.stressRatio || 0}
           isOpen={openInteractiveIdSet.has(cube.id)}
           walkthroughActive={walkthroughActive}
           lightsOn={state.viewSettings?.lightsOn !== false}

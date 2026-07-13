@@ -2,22 +2,8 @@ import { memo, useLayoutEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { getMaterialColor } from "../simulation/materials.js";
 
-function getCubeColor({ cube, isConfirmed, stressHeatmapEnabled, unstableIdSet, stressById }) {
-  let cubeColor = getMaterialColor(cube.material);
-
-  if (isConfirmed && stressHeatmapEnabled) {
-    const stressRatio = stressById?.[cube.id]?.stressRatio || 0;
-    if (stressRatio > 1.0) {
-      cubeColor = "#ef4444";
-    } else {
-      const hue = Math.max(0, Math.min(120, (1 - stressRatio) * 120));
-      cubeColor = `hsl(${hue}, 85%, 45%)`;
-    }
-  } else if (unstableIdSet?.has(cube.id)) {
-    cubeColor = "#ef4444";
-  }
-
-  return cubeColor;
+function getCubeColor({ cube }) {
+  return getMaterialColor(cube.material);
 }
 
 function getSnappedFaceNormal(point, cube) {
@@ -58,9 +44,6 @@ export default function CubeInstances({
   onHover,
   onPlace,
   onDelete,
-  stressHeatmapEnabled = false,
-  unstableIdSet,
-  stressById,
   walkthroughActive = false,
   lightsOn = true,
 }) {
@@ -71,10 +54,6 @@ export default function CubeInstances({
       const cube = cubes[i];
       const cubeColor = getCubeColor({
         cube,
-        isConfirmed: !isDraft,
-        stressHeatmapEnabled,
-        unstableIdSet,
-        stressById,
       });
       const existing = byColor.get(cubeColor);
       if (existing) {
@@ -85,7 +64,7 @@ export default function CubeInstances({
     }
 
     return Array.from(byColor.entries()).map(([color, items]) => ({ color, items }));
-  }, [cubes, isDraft, stressById, stressHeatmapEnabled, unstableIdSet]);
+  }, [cubes]);
 
   if (cubes.length === 0) return null;
 

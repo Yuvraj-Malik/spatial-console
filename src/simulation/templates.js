@@ -56,7 +56,7 @@ export const TEMPLATES = {
   // ─────────────────────────────────────────────────────────────────
   modern_house: {
     name: "Architectural Villa",
-    description: "A luxury dual-volume modern villa built entirely from structural voxels. Uses high-strength STEEL for all horizontal floor slabs to prevent collapse under the physics engine.",
+    description: "A luxury dual-volume modern villa built entirely from structural voxels, with steel floor slabs and wide open living spaces.",
     cubes: [
       // ── GROUND FLOOR / PATIO (y: 0.5) ────────────────────────────
       ...(() => {
@@ -380,7 +380,7 @@ export const TEMPLATES = {
   // ─────────────────────────────────────────────────────────────────
   multistory: {
     name: "3-Story Urban Loft",
-    description: "Built strictly from 1x1x1 cubes. Structural steel slabs are used between floors so the bending moment clears your solver.",
+    description: "Built strictly from 1x1x1 cubes, with steel slabs between each floor for a clean modern loft profile.",
     cubes: [
       // ── GROUND FLOOR (y: 0.5) ────────────────────────────────────
       ...(() => {

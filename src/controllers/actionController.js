@@ -60,18 +60,6 @@ export function dispatchAction(dispatch, type, payload) {
       });
       break;
       
-    case "COLLAPSE":
-      dispatch({
-        type: "COLLAPSE"
-      });
-      break;
-      
-    case "CANCEL_COLLAPSE":
-      dispatch({
-        type: "CANCEL_COLLAPSE"
-      });
-      break;
-
     case "LOAD_TEMPLATE":
       dispatch({
         type: "LOAD_TEMPLATE",
@@ -89,12 +77,6 @@ export function dispatchAction(dispatch, type, payload) {
     case "CLEAR_SCENE":
       dispatch({
         type: "CLEAR_SCENE"
-      });
-      break;
-
-    case "TOGGLE_STRESS_HEATMAP":
-      dispatch({
-        type: "TOGGLE_STRESS_HEATMAP"
       });
       break;
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   MATERIALS,
   COLOR_PALETTE,
@@ -15,7 +15,6 @@ import {
   registerUserWithEmail,
   loginUserWithEmail,
 } from "../core/firebase.js";
-import { calculateStructuralMetrics } from "../simulation/structuralEngine.js";
 
 const SHAPE_CATEGORIES = [
   {
@@ -87,7 +86,7 @@ export default function UIOverlay({
   const [jsonInput, setJsonInput] = useState("");
   const [copied, setCopied] = useState(false);
   const [importError, setImportError] = useState("");
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isSidebarHidden, setIsSidebarHidden] = useState(true);
   const [showHelp, setShowHelp] = useState(false); // Help overlay state
 
   // Accordion Expand States
@@ -117,7 +116,6 @@ export default function UIOverlay({
     currentMaterial,
     draftCubes,
     confirmedCubes,
-    collapseState,
     viewSettings,
     structuralMetrics,
   } = state;
@@ -125,25 +123,6 @@ export default function UIOverlay({
   const draftCount = draftCubes.length;
   const confirmedCount = confirmedCubes.length;
   const totalCount = draftCount + confirmedCount;
-  const stressEntries = Object.values(structuralMetrics?.stresses || {});
-  const overstressedCount = stressEntries.filter((entry) => entry.stressRatio > 1).length;
-  const unstableCount = structuralMetrics?.unstableIds?.length || 0;
-  const disconnectedCount = Math.max(0, unstableCount - overstressedCount);
-  const canRunSimulation = confirmedCount > 0 && unstableCount > 0;
-  const templateDiagnostics = useMemo(() => {
-    return Object.fromEntries(
-      Object.entries(TEMPLATES).map(([key, template]) => {
-        const cubes = template.cubes.map((cube, index) => ({
-          id: index + 1,
-          status: "confirmed",
-          shape: cube.shape || "cube",
-          rotationY: cube.rotationY || 0,
-          ...cube,
-        }));
-        return [key, calculateStructuralMetrics(cubes)];
-      }),
-    );
-  }, []);
 
   // Formatting helpers
   const formatMass = (kg) => {
@@ -292,33 +271,15 @@ export default function UIOverlay({
     setTimeout(() => setCopiedShareLink(false), 2000);
   };
 
-  // Determine structural status
+  // Determine scene status
   let statusText = "Empty Scene";
   let statusColor = "bg-[#1c1e24] text-slate-400 border-[#2a2d34]";
-  let statusDetail = "Start placing and confirm blocks to analyze the structure.";
+  let statusDetail = "Start placing and confirm blocks to build your model.";
   
   if (totalCount > 0) {
-    if (collapseState.warningActive) {
-      statusText = "COLLAPSE COUNTDOWN";
-      statusColor = "bg-[#3b1111] text-[#f87171] border-[#6b1e1e]";
-      statusDetail = `${collapseState.unstableIds.length} unstable voxel(s) will collapse unless you cancel.`;
-    } else if (disconnectedCount > 0 && overstressedCount > 0) {
-      statusText = "UNSUPPORTED + OVERLOADED";
-      statusColor = "bg-[#3b1111] text-[#f87171] border-[#6b1e1e]";
-      statusDetail = `${disconnectedCount} disconnected voxel(s) and ${overstressedCount} overstressed voxel(s) detected. Creative mode keeps them until you run simulation.`;
-    } else if (disconnectedCount > 0) {
-      statusText = "UNSUPPORTED STRUCTURE";
-      statusColor = "bg-[#3b1111] text-[#f87171] border-[#6b1e1e]";
-      statusDetail = `${disconnectedCount} voxel(s) are not connected to ground support. Creative mode keeps them until you run simulation.`;
-    } else if (overstressedCount > 0) {
-      statusText = "OVERLOADED STRUCTURE";
-      statusColor = "bg-[#332211] text-[#fbbf24] border-[#5c3e17]";
-      statusDetail = `${overstressedCount} voxel(s) exceed material compression or bending limits. Creative mode keeps them until you run simulation.`;
-    } else {
-      statusText = "STRUCTURALLY SOUND";
-      statusColor = "bg-[#132c1f] text-[#4ade80] border-[#1f5135]";
-      statusDetail = "All confirmed voxels are grounded and within the current solver limits.";
-    }
+    statusText = "ACTIVE BUILD";
+    statusColor = "bg-[#132c1f] text-[#4ade80] border-[#1f5135]";
+    statusDetail = "Edit, inspect, and export your model in real time.";
   }
 
   // OBJ Exporter
@@ -462,7 +423,7 @@ export default function UIOverlay({
   return (
     <>
       <div className={`absolute top-0 left-0 h-full w-96 z-20 pointer-events-auto flex flex-col bg-[#121316] border-r border-[#2a2d34] text-slate-300 shadow-2xl transition-transform duration-300 ease-in-out font-sans ${
-        (isCollapsed || viewSettings?.walkthroughActive) ? "-translate-x-full" : "translate-x-0"
+        (isSidebarHidden || viewSettings?.walkthroughActive) ? "-translate-x-full" : "translate-x-0"
       }`}>
         {/* Platform Header */}
         <div className="p-4 border-b border-[#2a2d34] flex items-center justify-between">
@@ -574,31 +535,6 @@ export default function UIOverlay({
                 className="w-full py-2 bg-[#121316] hover:bg-[#1a1c20] border border-[#2a2d34] text-[#38bdf8] font-bold rounded transition-all cursor-pointer animate-none"
               >
                 Close Guide
-              </button>
-            </div>
-          )}
-
-          {/* Collapse warning */}
-          {collapseState.warningActive && (
-            <div className="p-4 bg-red-950/60 border border-red-500/50 rounded space-y-2 text-slate-100 animate-pulse">
-              <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest flex items-center">
-                Collapse Alert
-              </h3>
-              <p className="text-xs text-red-200">
-                {collapseState.unstableIds.length} unstable voxel(s) will fall in{" "}
-                <span className="font-bold text-red-400 text-sm">{collapseState.countdown}s</span>
-              </p>
-              <div className="w-full bg-red-900/40 rounded h-1.5 overflow-hidden">
-                <div
-                  className="bg-red-500 h-full transition-all duration-1000"
-                  style={{ width: `${(collapseState.countdown / 3) * 100}%` }}
-                />
-              </div>
-              <button
-                onClick={() => dispatch({ type: "CANCEL_COLLAPSE" })}
-                className="w-full mt-1 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-bold transition-all shadow-md"
-              >
-                Cancel Structural Collapse
               </button>
             </div>
           )}
@@ -790,28 +726,10 @@ export default function UIOverlay({
           {activeTab === "telemetry" && (
             <div className="space-y-4">
               <div className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded space-y-2">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <h3 className="text-[10px] font-semibold uppercase tracking-wider text-slate-300">Creative Build Mode</h3>
-                    <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
-                      Confirming blocks never destroys them automatically. Analysis stays live, and failure simulation only runs when you trigger it.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => dispatch({ type: "RUN_STRUCTURAL_SIMULATION" })}
-                    disabled={!canRunSimulation}
-                    className={`px-3 py-2 rounded text-[10px] font-semibold border transition-all cursor-pointer whitespace-nowrap ${
-                      canRunSimulation
-                        ? "bg-red-950/30 border-red-500/40 text-red-300 hover:bg-red-900/40 hover:text-white"
-                        : "bg-[#121316] border-[#2a2d34] text-slate-600 cursor-not-allowed"
-                    }`}
-                  >
-                    Run Structural Simulation
-                  </button>
-                </div>
-                {!canRunSimulation && confirmedCount > 0 && unstableCount === 0 && (
-                  <p className="text-[9px] text-emerald-400">No unstable voxels detected. There is nothing to collapse right now.</p>
-                )}
+                <h3 className="text-[10px] font-semibold uppercase tracking-wider text-slate-300">Creative Build Mode</h3>
+                <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">
+                  Blocks remain exactly as placed. No automatic destruction or simulation events are applied.
+                </p>
               </div>
               
               {/* Voxel Counts */}
@@ -949,24 +867,8 @@ export default function UIOverlay({
                         className="p-3 bg-[#1a1c20] border border-[#2a2d34] rounded flex flex-col justify-between gap-2 transition-all hover:border-slate-500"
                       >
                         <div>
-                          <div className="flex items-start justify-between gap-2">
-                            <h4 className="font-semibold text-[11px] text-slate-200">{template.name}</h4>
-                            {templateDiagnostics[key]?.unstableIds?.length > 0 ? (
-                              <span className="px-1.5 py-0.5 rounded border border-red-900/60 bg-red-950/30 text-[8px] font-semibold uppercase tracking-wider text-red-300 whitespace-nowrap">
-                                {templateDiagnostics[key].unstableIds.length} unstable
-                              </span>
-                            ) : (
-                              <span className="px-1.5 py-0.5 rounded border border-emerald-900/60 bg-emerald-950/30 text-[8px] font-semibold uppercase tracking-wider text-emerald-300 whitespace-nowrap">
-                                Solver stable
-                              </span>
-                            )}
-                          </div>
+                          <h4 className="font-semibold text-[11px] text-slate-200">{template.name}</h4>
                           <p className="text-[10px] text-slate-500 mt-1 leading-relaxed">{template.description}</p>
-                          <p className="text-[9px] text-slate-600 mt-1 leading-relaxed">
-                            {templateDiagnostics[key]?.unstableIds?.length > 0
-                              ? "Current solver predicts unsupported or overloaded voxels in this blueprint."
-                              : "Current solver finds no unsupported or overloaded voxels in this blueprint."}
-                          </p>
                         </div>
                         <button
                           onClick={() => dispatch({ type: "LOAD_TEMPLATE", payload: { cubes: template.cubes } })}
@@ -1372,37 +1274,25 @@ export default function UIOverlay({
         </div>
       </div>
 
-      {/* Collapse/Expand Toggle Button */}
+      {/* Sidebar Toggle Button */}
       {!viewSettings?.walkthroughActive && (
         <button
           type="button"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={() => setIsSidebarHidden(!isSidebarHidden)}
           className={`absolute top-1/2 z-30 transform -translate-y-1/2 w-6 h-16 bg-[#121316] border-y border-r border-[#2a2d34] rounded-r flex items-center justify-center text-[#38bdf8] hover:text-slate-200 cursor-pointer hover:bg-[#1a1c20] transition-all duration-300 ease-in-out shadow ${
-            isCollapsed ? "left-0" : "left-96"
+            isSidebarHidden ? "left-0" : "left-96"
           }`}
-          title={isCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          title={isSidebarHidden ? "Show Sidebar" : "Hide Sidebar"}
         >
-          <span className="text-[10px] font-bold select-none">{isCollapsed ? "❯" : "❮"}</span>
+          <span className="text-[10px] font-bold select-none">{isSidebarHidden ? "❯" : "❮"}</span>
         </button>
       )}
 
       {/* FLOATING VIEWPORT SETTINGS TOOLBAR (Top Center) */}
-      {(!isCollapsed || viewSettings?.walkthroughActive) && (
+      {(!isSidebarHidden || viewSettings?.walkthroughActive) && (
         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-20 pointer-events-auto bg-[#121316]/90 backdrop-blur border border-[#2a2d34] rounded px-3 py-1 flex items-center gap-2 text-[10px] shadow-lg animate-fadeIn">
           {!viewSettings?.walkthroughActive && (
             <>
-              <button
-                onClick={() => dispatch({ type: "TOGGLE_STRESS_HEATMAP" })}
-                className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
-                  viewSettings.stressHeatmap
-                    ? "bg-[#1a1c20] text-[#38bdf8] border border-[#2a2d34]"
-                    : "text-slate-500 hover:text-slate-300 border border-transparent"
-                }`}
-                title="Toggle Stress Heatmap View"
-              >
-                Stress Heatmap
-              </button>
-              <div className="w-px h-3 bg-[#2a2d34]" />
               <button
                 onClick={() => dispatch({ type: "TOGGLE_GRID" })}
                 className={`flex items-center px-2.5 py-1 rounded transition-all cursor-pointer font-medium ${
