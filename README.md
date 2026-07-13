@@ -51,6 +51,13 @@ Open http://localhost:5173 in your browser
 npm run build
 ```
 
+## 🌐 Deployment
+
+- Frontend target: Netlify on `https://yuvrajm.dev`
+- Backend target: Render on `https://spatial-console.yuvrajm.dev`
+
+See [DEPLOYMENT.md](DEPLOYMENT.md) for complete DNS, environment, and release steps.
+
 ## 🧮 Engineering Model
 
 ### Structural Validation Logic

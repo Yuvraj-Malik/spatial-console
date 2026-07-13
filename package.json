@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "benchmark:collision": "node ./scratch/collision_benchmark.mjs",
+    "benchmark:bundle": "vite build"
   },
   "dependencies": {
     "@mediapipe/camera_utils": "^0.3.1675466862",
