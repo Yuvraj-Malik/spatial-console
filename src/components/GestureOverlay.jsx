@@ -27,6 +27,11 @@ const HAND_CONNECTIONS = [
   [0, 17],
 ];
 
+const CAMERA_INPUT_WIDTH = 1280;
+const CAMERA_INPUT_HEIGHT = 720;
+const TRACKING_RENDER_WIDTH = 640;
+const TRACKING_RENDER_HEIGHT = 360;
+
 function drawHandLandmarks(ctx, landmarks, width, height) {
   ctx.lineWidth = 2;
   ctx.strokeStyle = "#22d3ee";
@@ -112,6 +117,8 @@ export default function GestureOverlay({
         const ctx = canvasRef.current?.getContext("2d");
         if (!ctx || !canvasRef.current) return;
 
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
         ctx.drawImage(
           results.image,
@@ -143,8 +150,8 @@ export default function GestureOverlay({
         onFrame: async () => {
           await hands.send({ image: videoRef.current });
         },
-        width: 640,
-        height: 480,
+        width: CAMERA_INPUT_WIDTH,
+        height: CAMERA_INPUT_HEIGHT,
       });
 
       handsRef.current = hands;
@@ -189,15 +196,15 @@ export default function GestureOverlay({
   };
 
   return (
-    <div className="absolute top-4 right-4 z-20 pointer-events-auto bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 text-white max-w-sm w-80">
+    <div className="absolute top-4 right-4 z-20 pointer-events-auto bg-gray-900/90 backdrop-blur-sm rounded-lg p-4 text-white max-w-md w-96">
       <div className="mb-4">
         <h4 className="text-xs font-semibold mb-1 text-gray-400">
           Camera Feed
         </h4>
-        <div className="relative w-full h-32">
+        <div className="relative w-full aspect-video">
           <video
             ref={videoRef}
-            className="w-full h-full bg-black rounded object-cover"
+            className="w-full h-full bg-black rounded object-contain"
             style={{
               display: isActive ? "block" : "none",
               transform: "scaleX(-1)",
@@ -208,13 +215,13 @@ export default function GestureOverlay({
           />
           <canvas
             ref={canvasRef}
-            className="w-full h-full bg-black rounded object-cover absolute top-0 left-0"
+            className="w-full h-full bg-black rounded object-contain absolute top-0 left-0"
             style={{
               display: isActive ? "block" : "none",
               transform: "scaleX(-1)",
             }}
-            width={320}
-            height={240}
+            width={TRACKING_RENDER_WIDTH}
+            height={TRACKING_RENDER_HEIGHT}
           />
           {!isActive && (
             <div className="w-full h-full bg-gray-800 rounded flex items-center justify-center text-xs text-gray-400">
